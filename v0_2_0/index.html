@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en" data-theme="arda">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab Chart App v0.2.0</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Local vendor scripts for offline friendly behavior -->
+  <script src="libs/plotly.min.js"></script>
+  <script src="libs/html-to-image.min.js"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar_inner">
+      <div class="brand">
+        <div class="brand_title">Lab Chart App</div>
+        <div class="brand_subtitle">Edit table, compute stats, make figures, export charts and tables</div>
+      </div>
+
+      <div class="topbar_actions">
+        <a class="link" href="v0_1_0/" target="_blank" rel="noreferrer">Open v0.1.0</a>
+        <button id="btnClearAll" class="btn btn_ghost" type="button">Clear data</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app">
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Data mode</h2>
+
+        <div class="segmented" role="tablist" aria-label="Data mode">
+          <button id="tabPaste" class="segBtn segBtn_active" type="button" role="tab" aria-selected="true">Paste or upload</button>
+          <button id="tabGrid" class="segBtn" type="button" role="tab" aria-selected="false">Table editor</button>
+        </div>
+
+        <div id="panePaste" class="pane pane_active" role="tabpanel">
+          <div class="row">
+            <label class="label" for="fileInput">Upload CSV</label>
+            <input id="fileInput" type="file" accept=".csv,text/csv" />
+            <div class="hint">Nothing is uploaded anywhere. Files stay in memory.</div>
+          </div>
+
+          <div class="row">
+            <label class="label" for="pasteArea">Or paste CSV or TSV</label>
+            <textarea id="pasteArea" rows="8" placeholder="Paste a header row and data rows here"></textarea>
+          </div>
+
+          <div class="row row_inline">
+            <button id="btnParse" class="btn" type="button">Parse data</button>
+            <button id="btnLoadExample" class="btn btn_ghost" type="button">Load example</button>
+          </div>
+        </div>
+
+        <div id="paneGrid" class="pane" role="tabpanel">
+          <div class="row">
+            <div class="hint">
+              Click a cell and type. Paste blocks from Google Sheets directly into the grid.
+              The grid can auto expand to fit your paste.
+            </div>
+          </div>
+
+          <div class="row row_inline">
+            <button id="btnGridAddRow" class="btn btn_ghost" type="button">Add row</button>
+            <button id="btnGridAddCol" class="btn btn_ghost" type="button">Add column</button>
+          </div>
+
+          <div class="row row_inline">
+            <button id="btnGridAddRep" class="btn btn_ghost" type="button">Add replicate</button>
+            <button id="btnGridDelete" class="btn btn_ghost" type="button">Delete selected</button>
+          </div>
+
+          <div class="row row_inline">
+            <button id="btnGridUndo" class="btn btn_ghost" type="button">Undo</button>
+            <button id="btnGridRedo" class="btn btn_ghost" type="button">Redo</button>
+          </div>
+
+          <div class="row">
+            <div class="toggleRow">
+              <input id="toggleLive" type="checkbox" checked />
+              <label for="toggleLive">Live compute and redraw</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="messages" class="messages" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Columns and stats</h2>
+
+        <div class="row">
+          <label class="label" for="statsMode">Stats source</label>
+          <select id="statsMode">
+            <option value="replicates">Compute from replicate columns</option>
+            <option value="summary">Use provided value and error columns</option>
+          </select>
+          <div class="hint">
+            Use summary mode when you already have Protein mg/L and Stdv in your sheet.
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="colId">ID column</label>
+              <select id="colId"></select>
+            </div>
+            <div>
+              <label class="label" for="colTime">Time column (optional)</label>
+              <select id="colTime"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="label" for="colCondition">Condition column (optional)</label>
+          <select id="colCondition"></select>
+        </div>
+
+        <div id="replicateBlock" class="row">
+          <div class="label">Replicate columns</div>
+          <div id="replicateList" class="checklist"></div>
+          <div class="hint">Auto detected by iterate, iter, rep, replicate, r plus a number. You can override.</div>
+        </div>
+
+        <div id="summaryBlock" class="row" style="display:none;">
+          <div class="grid2">
+            <div>
+              <label class="label" for="colValue">Value column</label>
+              <select id="colValue"></select>
+            </div>
+            <div>
+              <label class="label" for="colError">Error column (optional)</label>
+              <select id="colError"></select>
+            </div>
+          </div>
+          <div class="grid2" style="margin-top:10px;">
+            <div>
+              <label class="label" for="colN">n column (optional)</label>
+              <select id="colN"></select>
+            </div>
+            <div>
+              <label class="label" for="errorMeaning">Error meaning</label>
+              <select id="errorMeaning">
+                <option value="sd">SD</option>
+                <option value="sem">SEM</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row row_inline">
+          <button id="btnCompute" class="btn" type="button" disabled>Compute</button>
+          <button id="btnDownloadProcessed" class="btn btn_ghost" type="button" disabled>Download processed CSV</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Chart</h2>
+
+        <div class="row">
+          <label class="label" for="chartType">Chart type</label>
+          <select id="chartType">
+            <option value="bar">Bar with error bars</option>
+            <option value="scatter">Scatter</option>
+            <option value="line">Line</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="xMode">X axis</label>
+              <select id="xMode"></select>
+            </div>
+            <div>
+              <label class="label" for="groupMode">Group</label>
+              <select id="groupMode">
+                <option value="none">None</option>
+                <option value="condition">Condition</option>
+                <option value="id">ID</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="errorMode">Error bars</label>
+              <select id="errorMode">
+                <option value="sem">SEM</option>
+                <option value="sd">SD</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+            <div class="toggleRow">
+              <input id="toggleRaw" type="checkbox" />
+              <label for="toggleRaw">Overlay raw points</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div class="toggleRow">
+              <input id="toggleGrid" type="checkbox" checked />
+              <label for="toggleGrid">Gridlines</label>
+            </div>
+            <div class="toggleRow">
+              <input id="toggleLegend" type="checkbox" checked />
+              <label for="toggleLegend">Legend</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="label">Filter</label>
+          <div class="grid2">
+            <div>
+              <label class="label_sub" for="filterIds">IDs</label>
+              <select id="filterIds" multiple size="5"></select>
+            </div>
+            <div>
+              <label class="label_sub" for="filterConditions">Conditions</label>
+              <select id="filterConditions" multiple size="5"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row row_inline">
+          <button id="btnRender" class="btn" type="button" disabled>Render</button>
+          <button id="btnResetView" class="btn btn_ghost" type="button" disabled>Reset view</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Style</h2>
+
+        <div class="row">
+          <label class="label" for="title">Chart title</label>
+          <input id="title" type="text" placeholder="Optional" />
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="xTitle">X title</label>
+              <input id="xTitle" type="text" placeholder="Optional" />
+            </div>
+            <div>
+              <label class="label" for="yTitle">Y title</label>
+              <input id="yTitle" type="text" placeholder="Mean" />
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="fontSize">Font size</label>
+              <input id="fontSize" type="number" min="8" max="28" value="14" />
+            </div>
+            <div>
+              <label class="label" for="markerSize">Marker size</label>
+              <input id="markerSize" type="number" min="2" max="24" value="7" />
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="lineWidth">Line width</label>
+              <input id="lineWidth" type="number" min="1" max="10" value="2" />
+            </div>
+            <div>
+              <label class="label" for="capSize">Cap size</label>
+              <input id="capSize" type="number" min="0" max="20" value="6" />
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="grid2">
+            <div>
+              <label class="label" for="errorWidth">Error width</label>
+              <input id="errorWidth" type="number" min="1" max="10" value="2" />
+            </div>
+            <div>
+              <label class="label" for="legendPos">Legend position</label>
+              <select id="legendPos">
+                <option value="right">Right</option>
+                <option value="bottom">Bottom</option>
+                <option value="top">Top</option>
+                <option value="left">Left</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Export</h2>
+
+        <div class="row">
+          <div class="grid2">
+            <button id="btnExportSvg" class="btn btn_ghost" type="button" disabled>Export SVG</button>
+            <button id="btnExportPng" class="btn btn_ghost" type="button" disabled>Export PNG</button>
+          </div>
+          <div class="row">
+            <label class="label_sub" for="pngScale">PNG scale</label>
+            <select id="pngScale">
+              <option value="1">1x</option>
+              <option value="2" selected>2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <label class="label">Table export</label>
+
+          <div class="row">
+            <label class="label_sub" for="tableTitle">Table title</label>
+            <input id="tableTitle" type="text" placeholder="Optional" />
+          </div>
+
+          <div class="row">
+            <label class="label_sub" for="tableCaption">Caption or notes</label>
+            <textarea id="tableCaption" rows="3" placeholder="Optional"></textarea>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label class="label_sub" for="tableVariant">Variant</label>
+              <select id="tableVariant">
+                <option value="summary">Summary (mean ± error, n)</option>
+                <option value="full">Full (replicates plus stats)</option>
+              </select>
+            </div>
+            <div>
+              <label class="label_sub" for="tableDecimals">Decimals</label>
+              <input id="tableDecimals" type="number" min="0" max="10" value="3" />
+            </div>
+          </div>
+
+          <div class="row row_inline" style="margin-top:10px;">
+            <button id="btnExportTableHtml" class="btn btn_ghost" type="button" disabled>Export table HTML</button>
+            <button id="btnExportTablePng" class="btn btn_ghost" type="button" disabled>Export table PNG</button>
+          </div>
+
+          <div class="row row_inline">
+            <button id="btnExportTablePdf" class="btn btn_ghost" type="button" disabled>Export table PDF</button>
+          </div>
+
+          <div class="hint">
+            PDF export opens a print view. Use Save as PDF in your browser.
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="main">
+      <div class="workspaceTabs">
+        <button id="tabViewChart" class="segBtn segBtn_active" type="button">Chart</button>
+        <button id="tabViewTable" class="segBtn" type="button">Table</button>
+      </div>
+
+      <div id="viewChart" class="view view_active">
+        <div class="chartWrap">
+          <div id="chart" class="chart"></div>
+          <div id="emptyState" class="emptyState">
+            <div class="emptyTitle">No chart yet</div>
+            <div class="emptyText">Parse or edit data, compute, then render.</div>
+          </div>
+        </div>
+
+        <section class="panel panel_main">
+          <h2>Processed preview</h2>
+          <div class="tableWrap">
+            <table id="previewTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div id="viewTable" class="view">
+        <section class="panel panel_main">
+          <h2>Table editor</h2>
+          <div class="hint" style="margin-bottom:10px;">
+            Click a header cell to select a column. Click a row number to select a row. Paste blocks into the grid.
+          </div>
+          <div id="gridMount" class="gridMount"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer_inner">
+      <div>Client side only. No storage. Export is the only way data leaves the page.</div>
+    </div>
+  </footer>
+
+  <script src="grid.js"></script>
+  <script src="table_export.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
