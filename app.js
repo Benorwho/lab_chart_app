@@ -1,9 +1,18 @@
 /* app.js v0.3.0
-   Adds:
-   table editor mode via Grid
-   summary stats mode (use provided value and error columns)
-   table export (HTML, PNG, PDF)
-   local Plotly and local html-to-image
+   Enhanced UX improvements:
+   - Workflow progress indicator
+   - Collapsible panels  
+   - Keyboard shortcuts
+   - Better visual feedback
+   - Data preview
+   - Help modal
+   - Improved accessibility
+
+   Previous features:
+   - Table editor mode via Grid
+   - Summary stats mode
+   - Table export (HTML, PNG, PDF)
+   - Local Plotly and local html-to-image
 
    No storage. No cookies. No analytics.
 */
@@ -32,6 +41,8 @@ const App = (() => {
 
     gridApi: null,
     gridModel: null,
+    
+    // Workflow tracking
     workflowStep: 1
   };
 
@@ -55,13 +66,6 @@ const App = (() => {
   }
 
   function cacheEls() {
-    // Enhanced v0.3 elements
-    els.btnHelp = document.getElementById("btnHelp");
-    els.helpModal = document.getElementById("helpModal");
-    els.btnCloseHelp = document.getElementById("btnCloseHelp");
-    els.dataPreview = document.getElementById("dataPreview");
-    els.dataStats = document.getElementById("dataStats");
-
     els.tabPaste = document.getElementById("tabPaste");
     els.tabGrid = document.getElementById("tabGrid");
     els.panePaste = document.getElementById("panePaste");
@@ -148,6 +152,13 @@ const App = (() => {
     els.previewBody = els.previewTable.querySelector("tbody");
 
     els.gridMount = document.getElementById("gridMount");
+    
+    // Enhanced v0.3 elements
+    els.btnHelp = document.getElementById("btnHelp");
+    els.helpModal = document.getElementById("helpModal");
+    els.btnCloseHelp = document.getElementById("btnCloseHelp");
+    els.dataPreview = document.getElementById("dataPreview");
+    els.dataStats = document.getElementById("dataStats");
   }
 
   function bindEvents() {
@@ -341,7 +352,7 @@ const App = (() => {
 
     state.computed = [];
     state.lastFigure = null;
-    if (window.Plotly) Plotly.purge(els.chart);
+    Plotly.purge(els.chart);
     setEmptyChart(true);
 
     logMsg(`Parsed ${state.rows.length} rows and ${state.headers.length} columns. Now configure columns.`, "ok");
@@ -1282,7 +1293,7 @@ C13-pptspn-final avg,0,Overnight,405.8,369.2,442.4`;
     els.previewHead.innerHTML = "";
     els.previewBody.innerHTML = "";
 
-    if (window.Plotly) Plotly.purge(els.chart);
+    Plotly.purge(els.chart);
     setEmptyChart(true);
 
     clearMsgs();
@@ -1551,22 +1562,6 @@ C13-pptspn-final avg,0,Overnight,405.8,369.2,442.4`;
     };
   }
 
-  window.addEventListener("DOMContentLoaded", () => {
-    init();
-  });
-
-  return { init };
-})();
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (!window.Plotly) {
-    const msg = document.getElementById("messages");
-    msg.textContent = "Plotly did not load. Confirm libs/plotly.min.js exists.";
-    return;
-  }
-  App.init();
-});
-
   // Enhanced UX functions for v0.3.0
   
   function showHelpModal() {
@@ -1674,6 +1669,16 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  window.addEventListener("DOMContentLoaded", () => {
+    init();
+  });
+
+  return { init };
+})();
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (!window.Plotly) {
+    const msg = document.getElementById("messages");
     msg.textContent = "Plotly did not load. Confirm libs/plotly.min.js exists.";
     return;
   }
