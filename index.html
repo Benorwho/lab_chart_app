@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lab Chart App v0.2.0</title>
+  <title>Lab Chart App v0.3.0</title>
   <link rel="stylesheet" href="styles.css" />
 
   <!-- Local vendor scripts for offline friendly behavior -->
@@ -15,354 +15,599 @@
   <header class="topbar">
     <div class="topbar_inner">
       <div class="brand">
-        <div class="brand_title">Lab Chart App</div>
+        <div class="brand_title">Lab Chart App <span class="version">v0.3</span></div>
         <div class="brand_subtitle">Edit table, compute stats, make figures, export charts and tables</div>
       </div>
 
       <div class="topbar_actions">
+        <button id="btnHelp" class="btn btn_icon" type="button" title="Help & shortcuts" aria-label="Help">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
         <a class="link" href="v0_1_0/" target="_blank" rel="noreferrer">Open v0.1.0</a>
         <button id="btnClearAll" class="btn btn_ghost" type="button">Clear data</button>
       </div>
     </div>
   </header>
 
+  <!-- Workflow Progress Indicator -->
+  <div class="workflow_progress">
+    <div class="workflow_step" data-step="1">
+      <div class="step_marker">1</div>
+      <div class="step_label">Load Data</div>
+    </div>
+    <div class="workflow_divider"></div>
+    <div class="workflow_step" data-step="2">
+      <div class="step_marker">2</div>
+      <div class="step_label">Configure</div>
+    </div>
+    <div class="workflow_divider"></div>
+    <div class="workflow_step" data-step="3">
+      <div class="step_marker">3</div>
+      <div class="step_label">Compute</div>
+    </div>
+    <div class="workflow_divider"></div>
+    <div class="workflow_step" data-step="4">
+      <div class="step_marker">4</div>
+      <div class="step_label">Visualize</div>
+    </div>
+  </div>
+
   <main class="app">
     <aside class="sidebar">
-      <section class="panel">
-        <h2>Data mode</h2>
-
-        <div class="segmented" role="tablist" aria-label="Data mode">
-          <button id="tabPaste" class="segBtn segBtn_active" type="button" role="tab" aria-selected="true">Paste or upload</button>
-          <button id="tabGrid" class="segBtn" type="button" role="tab" aria-selected="false">Table editor</button>
+      <!-- Data Input Section -->
+      <section class="panel panel_collapsible" data-panel="data">
+        <div class="panel_header">
+          <h2>
+            <span class="step_badge">1</span>
+            Data Input
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
         </div>
 
-        <div id="panePaste" class="pane pane_active" role="tabpanel">
-          <div class="row">
-            <label class="label" for="fileInput">Upload CSV</label>
-            <input id="fileInput" type="file" accept=".csv,text/csv" />
-            <div class="hint">Nothing is uploaded anywhere. Files stay in memory.</div>
+        <div class="panel_content">
+          <div class="segmented" role="tablist" aria-label="Data mode">
+            <button id="tabPaste" class="segBtn segBtn_active" type="button" role="tab" aria-selected="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+              Paste/Upload
+            </button>
+            <button id="tabGrid" class="segBtn" type="button" role="tab" aria-selected="false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              Table Editor
+            </button>
           </div>
 
-          <div class="row">
-            <label class="label" for="pasteArea">Or paste CSV or TSV</label>
-            <textarea id="pasteArea" rows="8" placeholder="Paste a header row and data rows here"></textarea>
+          <div id="panePaste" class="pane pane_active" role="tabpanel">
+            <div class="row">
+              <label class="label" for="fileInput">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload CSV
+              </label>
+              <input id="fileInput" type="file" accept=".csv,text/csv" />
+              <div class="hint">Files stay in memory. Nothing uploaded to servers.</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <label class="label" for="pasteArea">Or paste CSV/TSV data</label>
+              <textarea id="pasteArea" rows="8" placeholder="Paste header row and data rows here..." aria-describedby="pasteHint"></textarea>
+              <div id="pasteHint" class="hint">Try Ctrl+V from Excel or Google Sheets</div>
+            </div>
+
+            <div class="row row_inline">
+              <button id="btnParse" class="btn" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+                Parse Data
+              </button>
+              <button id="btnLoadExample" class="btn btn_ghost" type="button">Load Example</button>
+            </div>
           </div>
 
-          <div class="row row_inline">
-            <button id="btnParse" class="btn" type="button">Parse data</button>
-            <button id="btnLoadExample" class="btn btn_ghost" type="button">Load example</button>
+          <div id="paneGrid" class="pane" role="tabpanel">
+            <div class="row">
+              <div class="hint">
+                💡 <strong>Quick tips:</strong> Click cells to edit. Paste blocks from spreadsheets. Grid auto-expands to fit.
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="btn_group">
+                <button id="btnGridAddRow" class="btn btn_ghost btn_sm" type="button" title="Add a new row">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Row
+                </button>
+                <button id="btnGridAddCol" class="btn btn_ghost btn_sm" type="button" title="Add a new column">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Column
+                </button>
+                <button id="btnGridAddRep" class="btn btn_ghost btn_sm" type="button" title="Add replicate column">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Add Replicate
+                </button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="btn_group">
+                <button id="btnGridDelete" class="btn btn_ghost btn_sm" type="button" title="Delete selected row/column">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  Delete Selected
+                </button>
+                <button id="btnGridUndo" class="btn btn_ghost btn_sm" type="button" title="Undo (Ctrl+Z)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7v6h6"></path>
+                    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                  </svg>
+                  Undo
+                </button>
+                <button id="btnGridRedo" class="btn btn_ghost btn_sm" type="button" title="Redo (Ctrl+Y)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 7v6h-6"></path>
+                    <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+                  </svg>
+                  Redo
+                </button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="toggleRow">
+                <input id="toggleLive" type="checkbox" checked />
+                <label for="toggleLive">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  Live compute & redraw
+                </label>
+              </div>
+            </div>
           </div>
+
+          <!-- Data Preview -->
+          <div id="dataPreview" class="data_preview" style="display:none;">
+            <div class="preview_header">
+              <strong>Data loaded:</strong>
+              <span id="dataStats" class="data_stats"></span>
+            </div>
+          </div>
+
+          <div id="messages" class="messages" aria-live="polite" aria-atomic="true"></div>
+        </div>
+      </section>
+
+      <!-- Configuration Section -->
+      <section class="panel panel_collapsible" data-panel="config">
+        <div class="panel_header">
+          <h2>
+            <span class="step_badge">2</span>
+            Columns & Stats
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
         </div>
 
-        <div id="paneGrid" class="pane" role="tabpanel">
+        <div class="panel_content">
           <div class="row">
+            <label class="label" for="statsMode">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              Stats Source
+            </label>
+            <select id="statsMode">
+              <option value="replicates">Compute from replicate columns</option>
+              <option value="summary">Use provided value and error columns</option>
+            </select>
             <div class="hint">
-              Click a cell and type. Paste blocks from Google Sheets directly into the grid.
-              The grid can auto expand to fit your paste.
+              Use summary mode when you already have mean/error columns.
             </div>
-          </div>
-
-          <div class="row row_inline">
-            <button id="btnGridAddRow" class="btn btn_ghost" type="button">Add row</button>
-            <button id="btnGridAddCol" class="btn btn_ghost" type="button">Add column</button>
-          </div>
-
-          <div class="row row_inline">
-            <button id="btnGridAddRep" class="btn btn_ghost" type="button">Add replicate</button>
-            <button id="btnGridDelete" class="btn btn_ghost" type="button">Delete selected</button>
-          </div>
-
-          <div class="row row_inline">
-            <button id="btnGridUndo" class="btn btn_ghost" type="button">Undo</button>
-            <button id="btnGridRedo" class="btn btn_ghost" type="button">Redo</button>
           </div>
 
           <div class="row">
-            <div class="toggleRow">
-              <input id="toggleLive" type="checkbox" checked />
-              <label for="toggleLive">Live compute and redraw</label>
+            <div class="grid2">
+              <div>
+                <label class="label" for="colId">ID column</label>
+                <select id="colId" aria-describedby="colIdHint"></select>
+              </div>
+              <div>
+                <label class="label" for="colTime">Time column <span class="optional">(optional)</span></label>
+                <select id="colTime"></select>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div id="messages" class="messages" aria-live="polite"></div>
-      </section>
-
-      <section class="panel">
-        <h2>Columns and stats</h2>
-
-        <div class="row">
-          <label class="label" for="statsMode">Stats source</label>
-          <select id="statsMode">
-            <option value="replicates">Compute from replicate columns</option>
-            <option value="summary">Use provided value and error columns</option>
-          </select>
-          <div class="hint">
-            Use summary mode when you already have Protein mg/L and Stdv in your sheet.
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="colId">ID column</label>
-              <select id="colId"></select>
-            </div>
-            <div>
-              <label class="label" for="colTime">Time column (optional)</label>
-              <select id="colTime"></select>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <label class="label" for="colCondition">Condition column (optional)</label>
-          <select id="colCondition"></select>
-        </div>
-
-        <div id="replicateBlock" class="row">
-          <div class="label">Replicate columns</div>
-          <div id="replicateList" class="checklist"></div>
-          <div class="hint">Auto detected by iterate, iter, rep, replicate, r plus a number. You can override.</div>
-        </div>
-
-        <div id="summaryBlock" class="row" style="display:none;">
-          <div class="grid2">
-            <div>
-              <label class="label" for="colValue">Value column</label>
-              <select id="colValue"></select>
-            </div>
-            <div>
-              <label class="label" for="colError">Error column (optional)</label>
-              <select id="colError"></select>
-            </div>
-          </div>
-          <div class="grid2" style="margin-top:10px;">
-            <div>
-              <label class="label" for="colN">n column (optional)</label>
-              <select id="colN"></select>
-            </div>
-            <div>
-              <label class="label" for="errorMeaning">Error meaning</label>
-              <select id="errorMeaning">
-                <option value="sd">SD</option>
-                <option value="sem">SEM</option>
-                <option value="none">None</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="row row_inline">
-          <button id="btnCompute" class="btn" type="button" disabled>Compute</button>
-          <button id="btnDownloadProcessed" class="btn btn_ghost" type="button" disabled>Download processed CSV</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Chart</h2>
-
-        <div class="row">
-          <label class="label" for="chartType">Chart type</label>
-          <select id="chartType">
-            <option value="bar">Bar with error bars</option>
-            <option value="scatter">Scatter</option>
-            <option value="line">Line</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="xMode">X axis</label>
-              <select id="xMode"></select>
-            </div>
-            <div>
-              <label class="label" for="groupMode">Group</label>
-              <select id="groupMode">
-                <option value="none">None</option>
-                <option value="condition">Condition</option>
-                <option value="id">ID</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="errorMode">Error bars</label>
-              <select id="errorMode">
-                <option value="sem">SEM</option>
-                <option value="sd">SD</option>
-                <option value="none">None</option>
-              </select>
-            </div>
-            <div class="toggleRow">
-              <input id="toggleRaw" type="checkbox" />
-              <label for="toggleRaw">Overlay raw points</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div class="toggleRow">
-              <input id="toggleGrid" type="checkbox" checked />
-              <label for="toggleGrid">Gridlines</label>
-            </div>
-            <div class="toggleRow">
-              <input id="toggleLegend" type="checkbox" checked />
-              <label for="toggleLegend">Legend</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <label class="label">Filter</label>
-          <div class="grid2">
-            <div>
-              <label class="label_sub" for="filterIds">IDs</label>
-              <select id="filterIds" multiple size="5"></select>
-            </div>
-            <div>
-              <label class="label_sub" for="filterConditions">Conditions</label>
-              <select id="filterConditions" multiple size="5"></select>
-            </div>
-          </div>
-        </div>
-
-        <div class="row row_inline">
-          <button id="btnRender" class="btn" type="button" disabled>Render</button>
-          <button id="btnResetView" class="btn btn_ghost" type="button" disabled>Reset view</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Style</h2>
-
-        <div class="row">
-          <label class="label" for="title">Chart title</label>
-          <input id="title" type="text" placeholder="Optional" />
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="xTitle">X title</label>
-              <input id="xTitle" type="text" placeholder="Optional" />
-            </div>
-            <div>
-              <label class="label" for="yTitle">Y title</label>
-              <input id="yTitle" type="text" placeholder="Mean" />
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="fontSize">Font size</label>
-              <input id="fontSize" type="number" min="8" max="28" value="14" />
-            </div>
-            <div>
-              <label class="label" for="markerSize">Marker size</label>
-              <input id="markerSize" type="number" min="2" max="24" value="7" />
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="lineWidth">Line width</label>
-              <input id="lineWidth" type="number" min="1" max="10" value="2" />
-            </div>
-            <div>
-              <label class="label" for="capSize">Cap size</label>
-              <input id="capSize" type="number" min="0" max="20" value="6" />
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="grid2">
-            <div>
-              <label class="label" for="errorWidth">Error width</label>
-              <input id="errorWidth" type="number" min="1" max="10" value="2" />
-            </div>
-            <div>
-              <label class="label" for="legendPos">Legend position</label>
-              <select id="legendPos">
-                <option value="right">Right</option>
-                <option value="bottom">Bottom</option>
-                <option value="top">Top</option>
-                <option value="left">Left</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Export</h2>
-
-        <div class="row">
-          <div class="grid2">
-            <button id="btnExportSvg" class="btn btn_ghost" type="button" disabled>Export SVG</button>
-            <button id="btnExportPng" class="btn btn_ghost" type="button" disabled>Export PNG</button>
-          </div>
           <div class="row">
-            <label class="label_sub" for="pngScale">PNG scale</label>
-            <select id="pngScale">
-              <option value="1">1x</option>
-              <option value="2" selected>2x</option>
-              <option value="3">3x</option>
-              <option value="4">4x</option>
+            <label class="label" for="colCondition">Condition column <span class="optional">(optional)</span></label>
+            <select id="colCondition"></select>
+          </div>
+
+          <div id="replicateBlock" class="row">
+            <div class="label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Replicate Columns
+            </div>
+            <div id="replicateList" class="checklist"></div>
+            <div class="hint">Auto-detected by pattern: rep/replicate/iter/r + number</div>
+          </div>
+
+          <div id="summaryBlock" class="row" style="display:none;">
+            <div class="grid2">
+              <div>
+                <label class="label" for="colValue">Value column</label>
+                <select id="colValue"></select>
+              </div>
+              <div>
+                <label class="label" for="colError">Error column <span class="optional">(optional)</span></label>
+                <select id="colError"></select>
+              </div>
+            </div>
+            <div class="grid2" style="margin-top:10px;">
+              <div>
+                <label class="label" for="colN">n column <span class="optional">(optional)</span></label>
+                <select id="colN"></select>
+              </div>
+              <div>
+                <label class="label" for="errorMeaning">Error type</label>
+                <select id="errorMeaning">
+                  <option value="sd">Standard Deviation (SD)</option>
+                  <option value="sem">Standard Error (SEM)</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Compute Section -->
+      <section class="panel panel_collapsible" data-panel="compute">
+        <div class="panel_header">
+          <h2>
+            <span class="step_badge">3</span>
+            Compute Stats
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel_content">
+          <div class="row row_inline">
+            <button id="btnCompute" class="btn" type="button" disabled title="Configure columns first">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Compute
+            </button>
+            <button id="btnDownloadProcessed" class="btn btn_ghost" type="button" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download CSV
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chart Configuration -->
+      <section class="panel panel_collapsible" data-panel="chart">
+        <div class="panel_header">
+          <h2>
+            <span class="step_badge">4</span>
+            Chart Options
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel_content">
+          <div class="row">
+            <label class="label" for="chartType">Chart type</label>
+            <select id="chartType">
+              <option value="bar">Bar with error bars</option>
+              <option value="scatter">Scatter plot</option>
+              <option value="line">Line plot</option>
             </select>
           </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="row">
-          <label class="label">Table export</label>
 
           <div class="row">
-            <label class="label_sub" for="tableTitle">Table title</label>
-            <input id="tableTitle" type="text" placeholder="Optional" />
-          </div>
-
-          <div class="row">
-            <label class="label_sub" for="tableCaption">Caption or notes</label>
-            <textarea id="tableCaption" rows="3" placeholder="Optional"></textarea>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label class="label_sub" for="tableVariant">Variant</label>
-              <select id="tableVariant">
-                <option value="summary">Summary (mean ± error, n)</option>
-                <option value="full">Full (replicates plus stats)</option>
-              </select>
-            </div>
-            <div>
-              <label class="label_sub" for="tableDecimals">Decimals</label>
-              <input id="tableDecimals" type="number" min="0" max="10" value="3" />
+            <div class="grid2">
+              <div>
+                <label class="label" for="xMode">X axis</label>
+                <select id="xMode"></select>
+              </div>
+              <div>
+                <label class="label" for="groupMode">Group by</label>
+                <select id="groupMode">
+                  <option value="none">None</option>
+                  <option value="condition">Condition</option>
+                  <option value="id">ID</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div class="row row_inline" style="margin-top:10px;">
-            <button id="btnExportTableHtml" class="btn btn_ghost" type="button" disabled>Export table HTML</button>
-            <button id="btnExportTablePng" class="btn btn_ghost" type="button" disabled>Export table PNG</button>
+          <div class="row">
+            <div class="grid2">
+              <div>
+                <label class="label" for="errorMode">Error bars</label>
+                <select id="errorMode">
+                  <option value="sem">SEM</option>
+                  <option value="sd">SD</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div class="toggleRow">
+                <input id="toggleRaw" type="checkbox" />
+                <label for="toggleRaw">Show raw points</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="grid2">
+              <div class="toggleRow">
+                <input id="toggleGrid" type="checkbox" checked />
+                <label for="toggleGrid">Gridlines</label>
+              </div>
+              <div class="toggleRow">
+                <input id="toggleLegend" type="checkbox" checked />
+                <label for="toggleLegend">Legend</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <label class="label">Filter data</label>
+            <div class="grid2">
+              <div>
+                <label class="label_sub" for="filterIds">IDs</label>
+                <select id="filterIds" multiple size="4"></select>
+              </div>
+              <div>
+                <label class="label_sub" for="filterConditions">Conditions</label>
+                <select id="filterConditions" multiple size="4"></select>
+              </div>
+            </div>
+            <div class="hint">Hold Ctrl/Cmd to select multiple</div>
           </div>
 
           <div class="row row_inline">
-            <button id="btnExportTablePdf" class="btn btn_ghost" type="button" disabled>Export table PDF</button>
+            <button id="btnRender" class="btn" type="button" disabled title="Compute data first">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              Render Chart
+            </button>
+            <button id="btnResetView" class="btn btn_ghost" type="button" disabled>Reset View</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Styling Section -->
+      <section class="panel panel_collapsible panel_collapsed" data-panel="style">
+        <div class="panel_header">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+              <path d="M2 2l7.586 7.586"></path>
+              <circle cx="11" cy="11" r="2"></circle>
+            </svg>
+            Style & Appearance
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel_content">
+          <div class="row">
+            <label class="label" for="title">Chart title</label>
+            <input id="title" type="text" placeholder="Optional" />
           </div>
 
-          <div class="hint">
-            PDF export opens a print view. Use Save as PDF in your browser.
+          <div class="row">
+            <div class="grid2">
+              <div>
+                <label class="label" for="xTitle">X axis title</label>
+                <input id="xTitle" type="text" placeholder="Optional" />
+              </div>
+              <div>
+                <label class="label" for="yTitle">Y axis title</label>
+                <input id="yTitle" type="text" placeholder="Mean" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="grid2">
+              <div>
+                <label class="label" for="fontSize">Font size</label>
+                <input id="fontSize" type="number" min="8" max="28" value="14" />
+              </div>
+              <div>
+                <label class="label" for="markerSize">Marker size</label>
+                <input id="markerSize" type="number" min="2" max="24" value="7" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="grid2">
+              <div>
+                <label class="label" for="lineWidth">Line width</label>
+                <input id="lineWidth" type="number" min="1" max="10" value="2" />
+              </div>
+              <div>
+                <label class="label" for="capSize">Error cap size</label>
+                <input id="capSize" type="number" min="0" max="20" value="6" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="grid2">
+              <div>
+                <label class="label" for="errorWidth">Error bar width</label>
+                <input id="errorWidth" type="number" min="1" max="10" value="2" />
+              </div>
+              <div>
+                <label class="label" for="legendPos">Legend position</label>
+                <select id="legendPos">
+                  <option value="right">Right</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="top">Top</option>
+                  <option value="left">Left</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Export Section -->
+      <section class="panel panel_collapsible panel_collapsed" data-panel="export">
+        <div class="panel_header">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export
+          </h2>
+          <button class="panel_toggle" type="button" aria-label="Toggle panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel_content">
+          <div class="row">
+            <label class="label">Chart export</label>
+            <div class="grid2">
+              <button id="btnExportSvg" class="btn btn_ghost" type="button" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                SVG
+              </button>
+              <button id="btnExportPng" class="btn btn_ghost" type="button" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                PNG
+              </button>
+            </div>
+            <div class="row">
+              <label class="label_sub" for="pngScale">PNG resolution</label>
+              <select id="pngScale">
+                <option value="1">1x (Standard)</option>
+                <option value="2" selected>2x (High-DPI)</option>
+                <option value="3">3x (Print)</option>
+                <option value="4">4x (Publication)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <label class="label">Table export</label>
+
+            <div class="row">
+              <label class="label_sub" for="tableTitle">Table title</label>
+              <input id="tableTitle" type="text" placeholder="Optional" />
+            </div>
+
+            <div class="row">
+              <label class="label_sub" for="tableCaption">Caption or notes</label>
+              <textarea id="tableCaption" rows="3" placeholder="Optional"></textarea>
+            </div>
+
+            <div class="grid2">
+              <div>
+                <label class="label_sub" for="tableVariant">Format</label>
+                <select id="tableVariant">
+                  <option value="summary">Summary (mean ± error, n)</option>
+                  <option value="full">Full (replicates + stats)</option>
+                </select>
+              </div>
+              <div>
+                <label class="label_sub" for="tableDecimals">Decimal places</label>
+                <input id="tableDecimals" type="number" min="0" max="10" value="3" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <div class="btn_group">
+                <button id="btnExportTableHtml" class="btn btn_ghost btn_sm" type="button" disabled>HTML</button>
+                <button id="btnExportTablePng" class="btn btn_ghost btn_sm" type="button" disabled>PNG</button>
+                <button id="btnExportTablePdf" class="btn btn_ghost btn_sm" type="button" disabled>PDF</button>
+              </div>
+            </div>
+
+            <div class="hint">
+              PDF opens print dialog. Use "Save as PDF" in your browser.
+            </div>
           </div>
         </div>
       </section>
@@ -370,21 +615,41 @@
 
     <section class="main">
       <div class="workspaceTabs">
-        <button id="tabViewChart" class="segBtn segBtn_active" type="button">Chart</button>
-        <button id="tabViewTable" class="segBtn" type="button">Table</button>
+        <button id="tabViewChart" class="segBtn segBtn_active" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Chart
+        </button>
+        <button id="tabViewTable" class="segBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Table
+        </button>
       </div>
 
       <div id="viewChart" class="view view_active">
         <div class="chartWrap">
           <div id="chart" class="chart"></div>
           <div id="emptyState" class="emptyState">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
             <div class="emptyTitle">No chart yet</div>
-            <div class="emptyText">Parse or edit data, compute, then render.</div>
+            <div class="emptyText">Follow the workflow: Load data → Configure → Compute → Render</div>
           </div>
         </div>
 
         <section class="panel panel_main">
-          <h2>Processed preview</h2>
+          <h2>Processed Data Preview</h2>
           <div class="tableWrap">
             <table id="previewTable">
               <thead></thead>
@@ -396,9 +661,9 @@
 
       <div id="viewTable" class="view">
         <section class="panel panel_main">
-          <h2>Table editor</h2>
+          <h2>Table Editor</h2>
           <div class="hint" style="margin-bottom:10px;">
-            Click a header cell to select a column. Click a row number to select a row. Paste blocks into the grid.
+            💡 Click column headers to select columns. Click row numbers to select rows. Paste blocks directly into cells.
           </div>
           <div id="gridMount" class="gridMount"></div>
         </section>
@@ -406,9 +671,69 @@
     </section>
   </main>
 
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal" style="display:none;">
+    <div class="modal_backdrop"></div>
+    <div class="modal_content">
+      <div class="modal_header">
+        <h3>Help & Keyboard Shortcuts</h3>
+        <button id="btnCloseHelp" class="btn_close" type="button" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal_body">
+        <section class="help_section">
+          <h4>Workflow</h4>
+          <ol>
+            <li><strong>Load Data:</strong> Paste, upload CSV, or use table editor</li>
+            <li><strong>Configure:</strong> Select ID, time, condition, and replicate columns</li>
+            <li><strong>Compute:</strong> Calculate mean, SD, SEM from replicates</li>
+            <li><strong>Visualize:</strong> Render and customize your chart</li>
+          </ol>
+        </section>
+
+        <section class="help_section">
+          <h4>Keyboard Shortcuts</h4>
+          <div class="shortcut_list">
+            <div class="shortcut_item">
+              <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+              <span>Undo (in table editor)</span>
+            </div>
+            <div class="shortcut_item">
+              <kbd>Ctrl</kbd> + <kbd>Y</kbd>
+              <span>Redo (in table editor)</span>
+            </div>
+            <div class="shortcut_item">
+              <kbd>Ctrl</kbd> + <kbd>V</kbd>
+              <span>Paste data</span>
+            </div>
+            <div class="shortcut_item">
+              <kbd>Esc</kbd>
+              <span>Close dialogs</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="help_section">
+          <h4>Tips</h4>
+          <ul>
+            <li>Replicate columns are auto-detected by pattern: "rep 1", "replicate 2", "iter 3", etc.</li>
+            <li>Enable "Live compute" in table editor for instant updates</li>
+            <li>Use filters to show/hide specific IDs or conditions</li>
+            <li>Export charts at 2x-4x resolution for publications</li>
+            <li>All data stays local - nothing is uploaded to servers</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="footer_inner">
-      <div>Client side only. No storage. Export is the only way data leaves the page.</div>
+      <div>🔒 Client-side only. No storage. No tracking. Export is the only way data leaves the page.</div>
     </div>
   </footer>
 
@@ -417,4 +742,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
