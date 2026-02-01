@@ -1,4 +1,4 @@
-/* app.js v0.2.0
+/* app.js v0.3.0
    Adds:
    table editor mode via Grid
    summary stats mode (use provided value and error columns)
@@ -31,7 +31,8 @@ const App = (() => {
     lastFigure: null,
 
     gridApi: null,
-    gridModel: null
+    gridModel: null,
+    workflowStep: 1
   };
 
   const els = {};
@@ -45,11 +46,22 @@ const App = (() => {
     if (!window.htmlToImage) logMsg("html-to-image not found. Check libs/html-to-image.min.js", "err");
 
     initGrid();
-    logMsg("Ready. Choose paste or table editor, then compute and render.", "ok");
+    logMsg("✨ Ready! Load data to begin.", "ok");
     updateButtons();
+    
+    // Enhanced v0.3: Initialize workflow and UI
+    updateWorkflowProgress(1);
+    updateButtonTooltips();
   }
 
   function cacheEls() {
+    // Enhanced v0.3 elements
+    els.btnHelp = document.getElementById("btnHelp");
+    els.helpModal = document.getElementById("helpModal");
+    els.btnCloseHelp = document.getElementById("btnCloseHelp");
+    els.dataPreview = document.getElementById("dataPreview");
+    els.dataStats = document.getElementById("dataStats");
+
     els.tabPaste = document.getElementById("tabPaste");
     els.tabGrid = document.getElementById("tabGrid");
     els.panePaste = document.getElementById("panePaste");
@@ -139,6 +151,27 @@ const App = (() => {
   }
 
   function bindEvents() {
+    // Enhanced v0.3 - Help modal
+    if (els.btnHelp) {
+      els.btnHelp.addEventListener("click", showHelpModal);
+    }
+    if (els.btnCloseHelp && els.helpModal) {
+      els.btnCloseHelp.addEventListener("click", hideHelpModal);
+      const backdrop = els.helpModal.querySelector(".modal_backdrop");
+      if (backdrop) backdrop.addEventListener("click", hideHelpModal);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", handleKeyboardShortcuts);
+
+    // Panel collapse
+    document.querySelectorAll(".panel_collapsible").forEach(panel => {
+      const header = panel.querySelector(".panel_header");
+      if (header) {
+        header.addEventListener("click", () => togglePanel(panel));
+      }
+    });
+
     els.tabPaste.addEventListener("click", () => setMode("paste"));
     els.tabGrid.addEventListener("click", () => setMode("grid"));
 
@@ -308,11 +341,16 @@ const App = (() => {
 
     state.computed = [];
     state.lastFigure = null;
-    Plotly.purge(els.chart);
+    if (window.Plotly) Plotly.purge(els.chart);
     setEmptyChart(true);
 
-    logMsg(`Parsed ${state.rows.length} rows and ${state.headers.length} columns. Click Compute.`, "ok");
+    logMsg(`Parsed ${state.rows.length} rows and ${state.headers.length} columns. Now configure columns.`, "ok");
     updateButtons();
+    
+    // Enhanced v0.3: Show data preview and update workflow
+    showDataPreview();
+    updateWorkflowProgress(2); // Move to Configure step
+    updateButtonTooltips();
   }
 
   function loadFromGridModel(model) {
@@ -480,7 +518,11 @@ const App = (() => {
     renderPreviewTable(20);
     updateButtons();
 
-    if (!silent) logMsg("Computed. Render chart or adjust settings.", "ok");
+    if (!silent) logMsg("Computed. Now render your chart.", "ok");
+
+    // Enhanced v0.3: Update workflow
+    updateWorkflowProgress(4); // Move to Visualize step
+    updateButtonTooltips();
 
     renderChart();
   }
@@ -1240,12 +1282,18 @@ C13-pptspn-final avg,0,Overnight,405.8,369.2,442.4`;
     els.previewHead.innerHTML = "";
     els.previewBody.innerHTML = "";
 
-    Plotly.purge(els.chart);
+    if (window.Plotly) Plotly.purge(els.chart);
     setEmptyChart(true);
 
     clearMsgs();
-    logMsg("Cleared. Nothing is stored.", "ok");
+    logMsg("Cleared. Ready to start fresh.", "ok");
     updateButtons();
+    
+    // Enhanced v0.3: Reset workflow
+    state.workflowStep = 1;
+    updateWorkflowProgress(1);
+    showDataPreview(); // Will hide preview since no data
+    updateButtonTooltips();
   }
 
   function updateButtons() {
@@ -1513,6 +1561,119 @@ C13-pptspn-final avg,0,Overnight,405.8,369.2,442.4`;
 window.addEventListener("DOMContentLoaded", () => {
   if (!window.Plotly) {
     const msg = document.getElementById("messages");
+    msg.textContent = "Plotly did not load. Confirm libs/plotly.min.js exists.";
+    return;
+  }
+  App.init();
+});
+
+  // Enhanced UX functions for v0.3.0
+  
+  function showHelpModal() {
+    if (els.helpModal) {
+      els.helpModal.style.display = "grid";
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function hideHelpModal() {
+    if (els.helpModal) {
+      els.helpModal.style.display = "none";
+      document.body.style.overflow = "";
+    }
+  }
+
+  function togglePanel(panel) {
+    panel.classList.toggle("panel_collapsed");
+  }
+
+  function handleKeyboardShortcuts(e) {
+    // Ctrl/Cmd + Z for undo
+    if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+      if (state.mode === "grid") {
+        const inGrid = document.activeElement.closest(".gridMount");
+        if (inGrid && state.gridApi) {
+          e.preventDefault();
+          state.gridApi.undo();
+        }
+      }
+    }
+    
+    // Ctrl/Cmd + Y or Shift+Z for redo
+    if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+      if (state.mode === "grid") {
+        const inGrid = document.activeElement.closest(".gridMount");
+        if (inGrid && state.gridApi) {
+          e.preventDefault();
+          state.gridApi.redo();
+        }
+      }
+    }
+    
+    // ESC to close modals
+    if (e.key === "Escape") {
+      if (els.helpModal && els.helpModal.style.display !== "none") {
+        hideHelpModal();
+      }
+    }
+  }
+
+  function updateWorkflowProgress(step) {
+    state.workflowStep = Math.max(state.workflowStep, step);
+    
+    const steps = document.querySelectorAll(".workflow_step");
+    steps.forEach((stepEl, idx) => {
+      const stepNum = idx + 1;
+      
+      if (stepNum < state.workflowStep) {
+        stepEl.setAttribute("data-completed", "true");
+        stepEl.setAttribute("data-active", "false");
+      } else if (stepNum === state.workflowStep) {
+        stepEl.setAttribute("data-completed", "false");
+        stepEl.setAttribute("data-active", "true");
+      } else {
+        stepEl.setAttribute("data-completed", "false");
+        stepEl.setAttribute("data-active", "false");
+      }
+    });
+  }
+
+  function showDataPreview() {
+    if (!els.dataPreview || !els.dataStats) return;
+    
+    const rowCount = state.rows.length;
+    const colCount = state.headers.length;
+    
+    if (rowCount > 0 && colCount > 0) {
+      els.dataStats.textContent = `${rowCount} rows × ${colCount} columns`;
+      els.dataPreview.style.display = "block";
+    } else {
+      els.dataPreview.style.display = "none";
+    }
+  }
+
+  function updateButtonTooltips() {
+    if (els.btnCompute) {
+      if (els.btnCompute.disabled) {
+        els.btnCompute.title = state.headers.length === 0 
+          ? "Load data first" 
+          : "Configure columns to enable";
+      } else {
+        els.btnCompute.title = "Compute statistics (Ctrl+Enter)";
+      }
+    }
+    
+    if (els.btnRender) {
+      if (els.btnRender.disabled) {
+        els.btnRender.title = state.computed.length === 0 
+          ? "Compute data first" 
+          : "Configure chart settings";
+      } else {
+        els.btnRender.title = "Render chart";
+      }
+    }
+  }
+
     msg.textContent = "Plotly did not load. Confirm libs/plotly.min.js exists.";
     return;
   }
