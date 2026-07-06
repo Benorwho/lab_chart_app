@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chartbench — Arda charts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>{{CSS}}</style>
+</head>
+<body data-chart-theme="light">
+<div id="benchSwitch">
+  <span class="bbrand"><span class="bdot"></span>Chartbench<small>Arda</small></span>
+  <div class="bswitch">
+    <button data-bench="sb" class="on">Presentation</button>
+    <button data-bench="pb">Scientific</button>
+  </div>
+  <button id="chartThemeBtn" class="btheme" type="button" aria-pressed="false">Dark</button>
+</div>
+<div id="sbApp" class="bench-app active">
+
+<div class="app">
+  <header>
+    <span class="dot"></span>
+    <div class="brand"><b>Showbench</b><span>presentation charts · Arda</span></div>
+    <div class="spacer"></div>
+    <div class="exports">
+      <button class="btn" id="copyPng">Copy PNG</button>
+      <button class="btn" id="dlSvg">Download SVG</button>
+      <button class="btn primary" id="dlPng">Download PNG</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="panel">
+      <div class="group">
+        <p class="glabel">Chart type</p>
+        <div class="types" id="types"></div>
+      </div>
+
+      <div class="group">
+        <p class="glabel">Data</p>
+        <div id="tableMeta"></div>
+        <div id="dataTable"></div>
+        <div class="tablebtns">
+          <button class="linkbtn" id="addRowBtn">＋ Add row</button>
+          <button class="linkbtn" id="addColBtn" style="display:none">＋ Add column</button>
+        </div>
+        <p class="hint" id="dataHint"></p>
+        <details id="rawWrap">
+          <summary>Raw text / paste from a spreadsheet</summary>
+          <textarea id="data" spellcheck="false"></textarea>
+          <button class="linkbtn" id="loadSample">Load example data for this chart</button>
+        </details>
+      </div>
+
+      <div class="group">
+        <p class="glabel">Titles</p>
+        <label class="f"><span class="k">Title</span><input type="text" id="title"></label>
+        <label class="f"><span class="k">Subtitle</span><input type="text" id="subtitle"></label>
+        <label class="f"><span class="k">Footnote / source</span><input type="text" id="source"></label>
+        <label class="f"><span class="k">Unit suffix (eg %, kg, L)</span><input type="text" id="unit" placeholder="leave blank for none"></label>
+      </div>
+
+      <div class="group">
+        <p class="glabel">Colour</p>
+        <div class="seg" id="colorMode">
+          <button data-v="brand" class="on">Brand sequence</button>
+          <button data-v="ramp">Value ramp</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <p class="glabel">Options</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="showValues" checked> Show values</label>
+          <label class="chk"><input type="checkbox" id="showLabels" checked> Show labels</label>
+          <label class="chk"><input type="checkbox" id="sort" checked> Sort by value</label>
+        </div>
+      </div>
+
+      <div class="group" id="heatmapOpts" style="display:none">
+        <p class="glabel">Bubble scale</p>
+        <div class="seg" id="bubbleScale">
+          <button data-v="all" class="on">All data</button>
+          <button data-v="row">Per row</button>
+        </div>
+        <p class="hint">Per&nbsp;row sizes each row against <b>its own maximum</b>, so rows measured in different units (%, kg, m²) stay comparable within their row instead of being dwarfed by the largest value in the whole table. Give a row its own unit by writing the label as <b>Name (unit)</b> — e.g. <b>Moisture (%)</b>.</p>
+      </div>
+
+      <div class="group">
+        <p class="glabel">Canvas</p>
+        <div class="row2">
+          <label class="f"><span class="k">Aspect</span>
+            <select id="aspect">
+              <option value="16x9">16:9 (slide)</option>
+              <option value="4x3">4:3</option>
+              <option value="1x1">1:1 (square)</option>
+            </select>
+          </label>
+          <label class="f"><span class="k">Background</span>
+            <select id="bg">
+              <option value="cream">Cream</option>
+              <option value="white">White</option>
+              <option value="transparent">Transparent</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <section class="stagewrap">
+      <div class="stagebar">
+        <p class="glabel">Preview</p>
+        <span style="color:var(--muted);font-size:12px" id="dims"></span>
+      </div>
+      <div class="stage" id="stage"></div>
+    </section>
+  </div>
+</div>
+
+
+<!-- Removed stale body script 1; canonical script is loaded at the end. -->
+
+
+</div>
+<div id="pbApp" class="bench-app">
+
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span><b>Plotbench</b><span>scientific graphing</span></div>
+  <div class="tabs" id="typeTabs">
+    <button data-t="bar" class="on">Bar</button>
+    <button data-t="scatter">Scatter</button>
+    <button data-t="line">Line</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="histgrp" style="display:flex;gap:4px">
+    <button class="tbtn iconbtn" id="undoBtn" title="Undo (Ctrl+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>
+    </button>
+    <button class="tbtn iconbtn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0-5 5v0a5 5 0 0 0 5 5h6"/></svg>
+    </button>
+  </div>
+  <button class="tbtn iconbtn" id="themeBtn" title="Toggle dark mode">
+    <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+  <button class="tbtn" id="cfgBtn" title="Save / load configuration">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+    Config
+  </button>
+  <button class="tbtn" id="svgBtn">SVG</button>
+  <button class="tbtn primary" id="pngBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    Export PNG
+  </button>
+</div>
+
+<div class="shell">
+  <!-- LEFT: DATA -->
+  <div class="rail" id="dataRail">
+    <div class="railtitle">Data series</div>
+    <div id="seriesList" style="padding:0 12px"></div>
+    <div style="padding:6px 12px 14px">
+      <button class="fullbtn" id="smartBtn" style="background:var(--accent);border-color:var(--accent);color:#1a1205;font-weight:600">⤓ Smart import a CSV file</button>
+      <input type="file" id="smartFile" accept=".csv,.txt,.tsv" style="display:none">
+      <button class="fullbtn dash" id="addSeries" style="margin-top:8px">＋ Add series</button>
+      <button class="fullbtn" id="pasteBtn" style="margin-top:8px">⊞ Paste table from Sheets / Excel</button>
+      <button class="fullbtn" id="replBtn" style="margin-top:8px">∑ Compute mean ± error from replicates</button>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="canvaswrap">
+    <div class="paper" id="paper"></div>
+  </div>
+
+  <!-- RIGHT: STYLE -->
+  <div class="rail right" id="styleRail"></div>
+</div>
+
+<!-- Paste modal -->
+<div class="modal" id="pasteModal">
+  <div class="mbox">
+    <h2>Paste a table</h2>
+    <div class="mpad">
+      <p class="hint">Copy a block from Google Sheets / Excel and paste below. Pick the layout that matches your data.</p>
+      <div class="seg" style="margin-bottom:10px" id="pasteMode">
+        <button class="on" data-m="values">Wide: values</button>
+        <button data-m="valerr">Wide: value+error</button>
+        <button data-m="long">Long / tidy (pivot)</button>
+      </div>
+      <p class="note" id="pasteModeNote">Wide layout: first column = X, first row = series names, each other column is a series of values.</p>
+      <textarea id="pasteArea" rows="9" placeholder="Time (min)	pH	Protein conc.	Stdv&#10;t=5	3.5	0.717	0.02&#10;t=5	3.7	0.676	0.05&#10;t=10	3.5	0.909	0.09&#10;	3.7	0.657	0.03"></textarea>
+
+      <div id="longOpts" style="display:none;margin-top:12px">
+        <div class="row"><label>Header rows</label><div class="grow"><select id="hdrRows"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select></div></div>
+        <div class="mini">
+          <div><div class="fieldlab">X axis (groups along axis)</div><select id="colX"></select></div>
+          <div><div class="fieldlab">Bars within group</div><select id="colGroup"></select></div>
+        </div>
+        <div class="mini" style="margin-top:8px">
+          <div><div class="fieldlab">Value (Y)</div><select id="colY"></select></div>
+          <div><div class="fieldlab">Error (±)</div><select id="colErr"></select></div>
+        </div>
+        <div id="longPreview" class="note" style="margin-top:10px"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn" data-close>Cancel</button>
+      <button class="tbtn primary" id="pasteApply">Load data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Replicates modal -->
+<div class="modal" id="replModal">
+  <div class="mbox">
+    <h2>Mean ± error from replicates</h2>
+    <div class="mpad">
+      <p class="hint">Paste raw replicates: <b>one group per row</b>, replicates separated by tabs/commas/spaces. First cell of each row can be a label.</p>
+      <div class="row"><label>Error type</label>
+        <select id="replType" class="grow"><option value="sd">Standard deviation (SD)</option><option value="sem">Std. error of mean (SEM)</option><option value="ci95">95% CI (≈1.96·SEM)</option></select>
+      </div>
+      <div class="row"><label>First cell is</label>
+        <select id="replLabel" class="grow"><option value="label">a group label</option><option value="data">a data value</option></select>
+      </div>
+      <textarea id="replArea" rows="7" placeholder="Control	11.9	12.8	12.4&#10;Treated	18.2	19.5	18.9	19.1"></textarea>
+      <div id="replPreview" class="note"></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn" data-close>Cancel</button>
+      <button class="tbtn primary" id="replApply">Add as new series</button>
+    </div>
+  </div>
+</div>
+
+<!-- Smart import modal -->
+<div class="modal" id="smartModal">
+  <div class="mbox" style="width:680px">
+    <h2>Smart import</h2>
+    <div class="mpad">
+      <p class="hint" id="smartIntro">Reading your file…</p>
+      <div id="smartBlocks"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn" data-close>Close</button></div>
+  </div>
+</div>
+
+<!-- Config modal -->
+<div class="modal" id="cfgModal">
+  <div class="mbox">
+    <h2>Configuration</h2>
+    <div class="mpad">
+      <p class="hint">Your work autosaves to this browser and reloads automatically. Save the entire chart (data + styling) to a file for reusable figure templates, or load one back later.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="tbtn" id="cfgSave">⤓ Save .json</button>
+        <button class="tbtn" id="cfgLoad">⤒ Load .json</button>
+        <input type="file" id="cfgFile" accept=".json" style="display:none">
+        <button class="tbtn" id="cfgReset" style="margin-left:auto;color:var(--bad)">↺ Reset to sample</button>
+      </div>
+    </div>
+    <div class="mfoot"><button class="tbtn" data-close>Close</button></div>
+  </div>
+</div>
+
+
+<!-- Removed stale body script 2; canonical script is loaded at the end. -->
+
+
+</div>
+<script>{{VENDOR}}</script>
+<script>{{SHOWBENCH}}</script>
+<script>{{PLOTBENCH}}</script>
+<script>{{SHELL}}</script>
+</body>
+</html>

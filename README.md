@@ -1,12 +1,30 @@
-# Arda Chartbench v0.4.0 — Chartbench Edition
+# Arda Chartbench v0.5.0
 
-**Chartbench** is the new release of the Lab Chart App: a single, fully self-contained HTML file (`index.html`) with two chart-building workbenches under one roof. Just open the file in your browser — no server, no install, no external libraries to download.
+**Chartbench** is privacy-first scientific charting in a single HTML file (`index.html`) with two chart-building workbenches under one roof. Just open the file in your browser — no server, no install, no external libraries to download, and your data never leaves your machine.
 
-## 🎉 What's New in v0.4.0
+## 🎉 What's New in v0.5.0
 
-This release replaces the previous multi-file app (HTML + JS + CSS + bundled libs) with **one deployable file**. Everything — the app code, styles, and the charting library — is inlined, so you can share, host, or archive the app as a single document.
+This release answers the first round of user feedback on Plotbench bar charts, and restructures the project so it can grow (and take contributors) without losing the single-file deploy.
 
-### 🛠 Two Benches, One App
+### Smarter CSV import
+Smart import now recognizes the table layouts scientists actually export, and loads each with one click — with a preview of the series it will create before you commit:
+
+- **Grouped (long/tidy) data** — `X, Group, Value[, SD]` → one colored series per group, bars side by side.
+- **Replicate rows** — `Group, Value` with repeated groups → mean ± SD per group (n reported).
+- **Series columns (wide)** — categories in the first column, one numeric column per series; error columns named `SD`/`SEM`/`error` attach automatically as error bars to the series before them.
+- **Raw curves** and the multi-block **lab tensile export** (summary stats + stress–strain traces), as before.
+- Every card has a "Not right? Adjust the column mapping" escape hatch into the paste dialog, pre-mapped with the detector's guess.
+
+### Value labels on bars
+New **Value labels** group in the Appearance panel: print each bar's value above the bar (clear of the error whisker) or inside it — with decimals control, optional "± error", label color and size. Works in grouped, stacked (segment labels + stack totals) and diverging modes, and is included in SVG/PNG exports.
+
+### Faster multi-series workflows
+Each series card now has a **duplicate** button (same X labels, next palette color) — no more building the second group point by point.
+
+### New architecture (for contributors)
+The single `index.html` is now the **build output**, not the source. Real modules live in `src/`, the core parsing/stats code is unit-tested in Node, and CI enforces that the committed `index.html` matches `src/`. See [Development](#-development) below.
+
+## 🛠 Two Benches, One App
 
 Switch between the two workbenches from the top bar:
 
@@ -15,7 +33,7 @@ Switch between the two workbenches from the top bar:
 
 ### ✨ Highlights
 
-- **Single-file deploy**: `index.html` is the entire app (~430 KB). Copy it anywhere and it just works.
+- **Single-file deploy**: `index.html` is the entire app (~440 KB). Copy it anywhere and it just works.
 - **No local dependencies**: no `libs/` folder required — the charting library is bundled inline. The only network requests are optional Google Fonts (Inter, IBM Plex Mono); the app still works offline with fallback fonts.
 - **Chart export**: save your charts as standalone files directly from the browser.
 - **Modern UI**: refreshed branding and layout shared across both benches.
@@ -46,6 +64,42 @@ Earlier releases are archived in this repository, each in its own folder:
 
 Older versions are multi-file apps — open the `index.html` inside the respective folder (v0.2.0/v0.3.0 require their local `libs/` folder alongside).
 
+## 🧑‍💻 Development
+
+The deploy file is generated — **edit `src/`, not `index.html`**.
+
+```
+src/
+  index.template.html   page skeleton with {{PLACEHOLDER}} slots
+  styles/main.css       all CSS
+  vendor/d3.v7.min.js   vendored d3 bundle (Showbench)
+  core/stats.js         numeric helpers — unit-tested, seed of the stats engine
+  core/csv.js           CSV parsing + table-layout detection — unit-tested
+  showbench/            Presentation bench
+  plotbench/            Scientific bench (core modules are inlined into it)
+  shell/                top-bar bench switcher
+test/                   Node test suites for src/core
+build.mjs               assembles src/ → index.html
+```
+
+```bash
+npm test                # unit tests (no dependencies to install)
+npm run build           # regenerate index.html from src/
+node build.mjs --check  # verify index.html matches src/ (CI runs this)
+```
+
+Rules of the road:
+- `src/core/*` must stay pure (no DOM) so it runs under `node --test`. Every stats function needs a test against a published R/scipy reference value.
+- Commit the rebuilt `index.html` together with `src/` changes — CI fails on drift.
+
+## 🗺 Roadmap
+
+- **Stats v1**: t-test / Welch / Mann-Whitney, one-way ANOVA + Tukey, significance brackets and stars on charts, auto-generated methods sentence.
+- **Chart types**: box plots, dots-over-bars (SuperPlots), violin plots.
+- **Project files**: save/load the full figure state as versioned JSON.
+- **Journal export**: exact figure sizing in mm + DPI presets.
+- **Curve fitting**: nonlinear regression, dose–response / EC50.
+
 ## 📝 Browser Support
 
 - ✅ Chrome 90+
@@ -61,7 +115,7 @@ Older versions are multi-file apps — open the `index.html` inside the respecti
 
 ---
 
-**Version**: 0.4.0
+**Version**: 0.5.0
 **Release Date**: 2026
 **License**: Client-side only, no warranty
 

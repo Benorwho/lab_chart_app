@@ -1,0 +1,312 @@
+
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#FAFBF5}
+#benchSwitch{height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#451E28;color:#fff;position:sticky;top:0;z-index:60}
+#benchSwitch .bbrand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.2px}
+#benchSwitch .bbrand .bdot{width:9px;height:9px;border-radius:50%;background:#FFE283}
+#benchSwitch .bbrand small{font-weight:500;opacity:.6;font-size:10px;text-transform:uppercase;letter-spacing:1.4px;margin-left:2px}
+#benchSwitch .bswitch{margin-left:14px;display:flex;background:rgba(255,255,255,.12);border-radius:9px;padding:3px}
+#benchSwitch .bswitch button{background:none;border:0;color:#e9dfe2;padding:6px 16px;border-radius:7px;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit}
+#benchSwitch .bswitch button.on{background:#FFE283;color:#451E28}
+.bench-app{display:none}
+.bench-app.active{display:block}
+#sbApp,#pbApp{height:calc(100vh - 46px);overflow:hidden}
+#sbApp .app{height:100%}
+#pbApp{color:#3A3230}
+
+/* ===== Showbench (scoped #sbApp) ===== */
+#sbApp {
+    --maroon:#451E28; --gold:#FFE283; --amber:#C09826; --slate:#A3AEBF;
+    --cream:#FAFBF5; --ink:#3A3230;
+    --line:#E7E3D8; --panel:#FFFFFF; --muted:#8C8478;
+    --font:'DS Sans','Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+    --radius:10px;
+  }
+#sbApp * {box-sizing:border-box}
+#sbApp, #sbApp {margin:0;height:100%}
+#sbApp {
+    font-family:var(--font); color:var(--ink); background:var(--cream);
+    -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.45;
+  }
+#sbApp .app {display:grid; grid-template-rows:auto 1fr; height:100vh}
+#sbApp /* top bar */
+  header {
+    display:flex; align-items:center; gap:14px;
+    padding:12px 20px; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+#sbApp .brand {display:flex; align-items:baseline; gap:9px}
+#sbApp .brand b {font-size:18px; font-weight:700; letter-spacing:-.01em}
+#sbApp .brand span {font-size:12px; color:var(--muted)}
+#sbApp .dot {width:10px;height:10px;border-radius:50%;background:var(--maroon);
+       transform:translateY(1px)}
+#sbApp .spacer {flex:1}
+#sbApp .exports {display:flex; gap:8px}
+#sbApp button {font-family:var(--font); cursor:pointer}
+#sbApp .btn {
+    border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    padding:8px 13px; border-radius:8px; font-size:13px; font-weight:600;
+    transition:border-color .12s, background .12s;
+  }
+#sbApp .btn:hover {border-color:var(--amber)}
+#sbApp .btn.primary {background:var(--maroon); color:#fff; border-color:var(--maroon)}
+#sbApp .btn.primary:hover {background:#5a2935}
+#sbApp .btn:focus-visible, #sbApp .seg button:focus-visible, #sbApp .type:focus-visible {
+    outline:2px solid var(--amber); outline-offset:2px}
+#sbApp /* layout */
+  .main {display:grid; grid-template-columns:344px 1fr; min-height:0}
+#sbApp .panel {
+    border-right:1px solid var(--line); background:var(--panel);
+    overflow-y:auto; padding:18px 18px 40px;
+  }
+#sbApp .stagewrap {padding:22px; overflow:auto; display:flex; flex-direction:column; min-width:0}
+#sbApp /* sidebar bits */
+  .group {margin-bottom:20px}
+#sbApp .glabel {font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+          color:var(--muted); margin:0 0 9px}
+#sbApp .types {display:grid; grid-template-columns:1fr 1fr; gap:8px}
+#sbApp .type {
+    display:flex; flex-direction:column; gap:7px; align-items:flex-start;
+    border:1px solid var(--line); background:var(--cream); border-radius:9px;
+    padding:10px; text-align:left; transition:border-color .12s, box-shadow .12s;
+  }
+#sbApp .type svg {display:block}
+#sbApp .type small {font-size:12px; font-weight:600; color:var(--ink); line-height:1.2}
+#sbApp .type:hover {border-color:var(--amber)}
+#sbApp .type.on {border-color:var(--maroon); box-shadow:inset 0 0 0 1px var(--maroon)}
+#sbApp label.f {display:block; margin-bottom:11px}
+#sbApp label.f .k {font-size:12px; color:var(--muted); display:block; margin-bottom:4px}
+#sbApp input[type=text], #sbApp textarea, #sbApp select {
+    width:100%; font-family:var(--font); font-size:13px; color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:#fff;
+  }
+#sbApp input[type=text]:focus, #sbApp textarea:focus, #sbApp select:focus {
+    outline:none; border-color:var(--amber)}
+#sbApp textarea {min-height:148px; resize:vertical; line-height:1.5;
+           font-family:'Inter',ui-monospace,monospace; font-size:12.5px; white-space:pre}
+#sbApp .hint {font-size:11.5px; color:var(--muted); margin:6px 0 0; line-height:1.4}
+#sbApp /* data table editor */
+  .dt {width:100%; border-collapse:collapse}
+#sbApp .dt th {font-size:10px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--muted);
+         text-align:left; padding:0 4px 4px; font-weight:700}
+#sbApp .dt td {padding:2px 2px; vertical-align:middle}
+#sbApp .dt input {width:100%; font-family:var(--font); font-size:12.5px; color:var(--ink);
+            border:1px solid var(--line); border-radius:6px; padding:5px 6px; background:#fff}
+#sbApp .dt input:focus {outline:none; border-color:var(--amber)}
+#sbApp .dt input.tot {width:16px;height:16px;accent-color:var(--maroon);cursor:pointer}
+#sbApp .dt .rm {cursor:pointer; color:var(--muted); text-align:center; width:24px; border:0; background:none;
+          font-size:16px; line-height:1; padding:2px; border-radius:6px}
+#sbApp .dt .rm:hover {color:#B23A48; background:var(--cream)}
+#sbApp .dt th.ch, #sbApp .dt td.ch {width:24px}
+#sbApp .tablebtns {display:flex; gap:14px; margin-top:8px}
+#sbApp .tmeta {display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px}
+#sbApp .tmeta .k {font-size:11px; color:var(--muted); display:block; margin-bottom:3px}
+#sbApp #rawWrap {margin-top:12px; border-top:1px solid var(--line); padding-top:10px}
+#sbApp #rawWrap summary {font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+                   color:var(--muted); cursor:pointer; list-style:revert}
+#sbApp #rawWrap textarea {margin-top:8px}
+#sbApp .row2 {display:grid; grid-template-columns:1fr 1fr; gap:10px}
+#sbApp .seg {display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+#sbApp .seg button {border:0; background:#fff; padding:7px 11px; font-size:12.5px; color:var(--ink); font-weight:600}
+#sbApp .seg button.on {background:var(--maroon); color:#fff}
+#sbApp .checks {display:flex; flex-direction:column; gap:9px}
+#sbApp .chk {display:flex; align-items:center; gap:9px; font-size:13px; cursor:pointer}
+#sbApp .chk input {width:16px;height:16px;accent-color:var(--maroon); cursor:pointer}
+#sbApp .linkbtn {background:none;border:0;color:var(--maroon);font-weight:600;font-size:12.5px;
+           padding:0;text-decoration:underline;cursor:pointer}
+#sbApp /* stage */
+  .stage {
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 1px 2px rgba(58,50,48,.04), 0 8px 30px rgba(58,50,48,.05);
+    align-self:flex-start; max-width:100%;
+  }
+#sbApp .stage svg {display:block; max-width:100%; height:auto; border-radius:var(--radius)}
+#sbApp .stagebar {display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap}
+#sbApp .stagebar .glabel {margin:0}
+#sbApp .empty {
+    width:760px; max-width:100%; aspect-ratio:16/9; display:flex; align-items:center;
+    justify-content:center; text-align:center; color:var(--muted); padding:30px;
+    font-size:14px;
+  }
+
+  @media (max-width:900px) {
+#sbApp .main {grid-template-columns:1fr; grid-template-rows:auto 1fr}
+#sbApp .panel {border-right:0; border-bottom:1px solid var(--line); max-height:50vh}
+}
+
+  @media (prefers-reduced-motion:reduce) {
+#sbApp * {transition:none!important}
+}
+#sbApp .stage svg {animation:fade .25s ease both}
+
+  @keyframes fade {from{opacity:.0}to{opacity:1}}
+/* ===== Plotbench (scoped #pbApp) ===== */
+#pbApp {
+  /* brand palette */
+  --bg:#EDEADC; --panel:#F6F4EC; --surface:#FAFBF5; --surface2:#EDEADC;
+  --border:#dcd8c6; --border2:#c7c2ad;
+  --text:#3A3230; --muted:#6e6359; --faint:#9a9082;
+  --accent:#C09826; --accent-dim:#a3801f; --accent-soft:#FFE283; --accent-pale:#FFF9CC;
+  --maroon:#451E28; --slate:#A3AEBF; --ice:#E4EDF0;
+  --good:#5a8a4f; --bad:#b3503f;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'Inter',-apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+}
+#pbApp * {box-sizing:border-box}
+#pbApp, #pbApp {margin:0;height:100%}
+#pbApp {background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;-webkit-font-smoothing:antialiased;overflow:hidden}
+#pbApp button, #pbApp input, #pbApp select, #pbApp textarea {font-family:inherit;font-size:inherit;color:inherit}
+#pbApp /* ---- top bar ---- */
+.topbar {height:50px;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--border)}
+#pbApp .brand {display:flex;align-items:baseline;gap:8px;user-select:none}
+#pbApp .brand .dot {width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);align-self:center}
+#pbApp .brand b {font-weight:700;letter-spacing:.3px}
+#pbApp .brand span {font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:1px}
+#pbApp .tabs {display:flex;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:3px}
+#pbApp .tabs button {background:none;border:0;padding:5px 13px;border-radius:5px;color:var(--muted);cursor:pointer;font-weight:500}
+#pbApp .tabs button.on {background:var(--accent-soft);color:var(--maroon);box-shadow:0 1px 2px rgba(58,50,48,.12)}
+#pbApp .spacer {flex:1}
+#pbApp .tbtn {background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:6px;font-weight:500}
+#pbApp .tbtn:hover {border-color:var(--border2);background:var(--surface2)}
+#pbApp .tbtn.primary {background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+#pbApp .tbtn.primary:hover {background:var(--accent-dim)}
+#pbApp .tbtn svg {width:14px;height:14px}
+#pbApp /* ---- layout ---- */
+.shell {display:flex;height:calc(100% - 50px)}
+#pbApp .rail {width:312px;background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0}
+#pbApp .rail.right {border-right:0;border-left:1px solid var(--border);width:300px}
+#pbApp .canvaswrap {flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:34px;background:
+  radial-gradient(circle at 1px 1px, #d4cfbb 1px, transparent 0) 0 0/22px 22px,var(--bg)}
+#pbApp .rail::-webkit-scrollbar, #pbApp .canvaswrap::-webkit-scrollbar {width:10px;height:10px}
+#pbApp .rail::-webkit-scrollbar-thumb, #pbApp .canvaswrap::-webkit-scrollbar-thumb {background:var(--border2);border-radius:5px;border:2px solid var(--panel)}
+#pbApp .paper {background:#fff;box-shadow:0 12px 34px rgba(58,50,48,.18),0 0 0 1px rgba(58,50,48,.08)}
+#pbApp /* ---- sections ---- */
+.sec {border-bottom:1px solid var(--border)}
+#pbApp .sec>h3 {margin:0;padding:11px 14px;font-size:11px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+#pbApp .sec>h3 .chev {transition:transform .18s;color:var(--faint)}
+#pbApp .sec.collapsed>h3 .chev {transform:rotate(-90deg)}
+#pbApp .sec.collapsed .body {display:none}
+#pbApp .body {padding:4px 14px 14px}
+#pbApp .railtitle {padding:13px 14px 4px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+#pbApp /* ---- form rows ---- */
+.row {display:flex;align-items:center;gap:8px;margin:7px 0}
+#pbApp .row label {flex:0 0 92px;color:var(--muted);font-size:12px}
+#pbApp .row .grow {flex:1}
+#pbApp input[type=text], #pbApp input[type=number], #pbApp select, #pbApp textarea {width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;
+  padding:6px 8px;color:var(--text);outline:none}
+#pbApp input[type=number] {font-family:var(--mono)}
+#pbApp input:focus, #pbApp select:focus, #pbApp textarea:focus {border-color:var(--accent-dim)}
+#pbApp textarea {resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.5}
+#pbApp select {cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 3.5L5 6.5L8 3.5' stroke='%239aa3b2' fill='none' stroke-width='1.4'/></svg>");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
+#pbApp .mini {display:flex;gap:8px}
+#pbApp .mini>div {flex:1}
+#pbApp .fieldlab {font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-family:var(--mono)}
+#pbApp /* toggle */
+.tog {display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+#pbApp .tog .sw {width:34px;height:19px;border-radius:11px;background:var(--border2);position:relative;transition:.15s;flex:0 0 auto}
+#pbApp .tog .sw::after {content:'';position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(58,50,48,.25);top:2px;left:2px;transition:.15s}
+#pbApp .tog.on .sw {background:var(--accent)}
+#pbApp .tog.on .sw::after {left:17px;background:#fff}
+#pbApp /* color */
+.swatch {width:26px;height:26px;border-radius:6px;border:2px solid var(--border2);cursor:pointer;flex:0 0 auto;position:relative;overflow:hidden}
+#pbApp .swatch input {position:absolute;inset:-6px;width:200%;height:200%;border:0;padding:0;cursor:pointer;background:none}
+#pbApp .palette {display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+#pbApp .palette .p {width:20px;height:20px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:.1s}
+#pbApp .palette .p:hover {transform:scale(1.12)}
+#pbApp /* series card */
+.scard {background:var(--surface);border:1px solid var(--border);border-radius:8px;margin:9px 0;overflow:hidden}
+#pbApp .scard .shead {display:flex;align-items:center;gap:8px;padding:8px 9px;background:var(--surface2)}
+#pbApp .scard .shead input.sname {flex:1;background:var(--panel);border-color:var(--border)}
+#pbApp .scard .sbody {padding:9px;display:none}
+#pbApp .scard.open .sbody {display:block}
+#pbApp .scard .expand {background:none;border:0;color:var(--faint);cursor:pointer;padding:2px;display:flex}
+#pbApp .scard.open .expand svg {transform:rotate(180deg)}
+#pbApp .xbtn {background:none;border:0;color:var(--faint);cursor:pointer;padding:3px;border-radius:4px;display:flex}
+#pbApp .xbtn:hover {color:var(--bad);background:rgba(232,87,63,.12)}
+#pbApp /* data table */
+.dt {width:100%;border-collapse:collapse;margin-top:6px}
+#pbApp .dt th {font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;font-weight:500;padding:2px 3px;text-align:left;font-family:var(--mono)}
+#pbApp .dt td {padding:1px}
+#pbApp .dt input {padding:4px 5px;font-size:12px}
+#pbApp .dt .rmrow {cursor:pointer;color:var(--faint);text-align:center;width:20px}
+#pbApp .dt .rmrow:hover {color:var(--bad)}
+#pbApp .addrow {width:100%;margin-top:6px;background:var(--panel);border:1px dashed var(--border2);border-radius:5px;padding:5px;color:var(--muted);cursor:pointer}
+#pbApp .addrow:hover {border-color:var(--accent-dim);color:var(--text)}
+#pbApp .fullbtn {width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:9px;color:var(--text);cursor:pointer;font-weight:500;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px}
+#pbApp .fullbtn:hover {border-color:var(--border2);background:var(--surface2)}
+#pbApp .fullbtn.dash {border-style:dashed}
+#pbApp .hint {font-size:11px;color:var(--faint);line-height:1.5;margin:6px 0}
+#pbApp /* modal */
+.modal {position:fixed;inset:0;background:rgba(58,50,48,.42);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px)}
+#pbApp .modal.on {display:flex}
+#pbApp .mbox {background:var(--panel);border:1px solid var(--border2);border-radius:12px;width:560px;max-width:92vw;max-height:88vh;overflow:auto;box-shadow:0 24px 60px rgba(58,50,48,.3)}
+#pbApp .mbox h2 {margin:0;padding:16px 20px;font-size:15px;border-bottom:1px solid var(--border);display:flex;justify-content:between;align-items:center}
+#pbApp .mpad {padding:18px 20px}
+#pbApp .mfoot {padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+#pbApp .seg {display:flex;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px;gap:2px}
+#pbApp .seg button {flex:1;background:none;border:0;padding:6px;border-radius:4px;color:var(--muted);cursor:pointer}
+#pbApp .seg button.on {background:var(--accent-soft);color:var(--maroon);font-weight:600}
+#pbApp code {font-family:var(--mono);background:var(--surface);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--accent-dim)}
+#pbApp .note {font-size:11px;color:var(--faint);margin-top:7px;line-height:1.5}
+/* Smart import: kind badge + series preview chips */
+#pbApp .kbadge {font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--maroon);background:var(--accent-soft);border-radius:99px;padding:3px 8px;white-space:nowrap;flex:none}
+#pbApp .sprev {display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+#pbApp .schip {display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:3px 9px}
+#pbApp .schip .sdot {width:8px;height:8px;border-radius:50%;flex:none}
+#pbApp /* mechanical properties table */
+.mechwrap {overflow-x:auto;margin-top:10px}
+#pbApp table.mech {width:100%;border-collapse:collapse;font-size:11px}
+#pbApp table.mech th {font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--faint);font-weight:500;text-align:left;padding:4px 6px 4px 0;border-bottom:1px solid var(--border)}
+#pbApp table.mech td {padding:5px 6px 5px 0;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--text);white-space:nowrap}
+#pbApp table.mech td:first-child {font-family:var(--sans)}
+#pbApp .mdot {width:9px;height:9px;border-radius:2px;flex:0 0 auto;display:inline-block}
+#pbApp /* icon-only buttons */
+.tbtn.iconbtn {padding:7px 9px}
+#pbApp .tbtn.iconbtn svg {width:16px;height:16px}
+#pbApp .tbtn:disabled {opacity:.38;cursor:default}
+#pbApp .tbtn:disabled:hover {border-color:var(--border);background:var(--surface)}
+#pbApp /* ---- DARK MODE ---- */
+body.dark {
+  --bg:#211d1b; --panel:#2a2522; --surface:#332d29; --surface2:#3d352f;
+  --border:#403831; --border2:#4f463d;
+  --text:#efe9e0; --muted:#b3a99c; --faint:#857a6d;
+  --accent:#E0B33A; --accent-dim:#c79b27; --accent-soft:#5a4a1e; --accent-pale:#3f3517;
+  --maroon:#E8B7C2; --slate:#A3AEBF; --ice:#2c3a3f;
+}
+#pbApp.dark .paper {box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)}
+#pbApp.dark .canvaswrap {background:
+  radial-gradient(circle at 1px 1px, #2c2724 1px, transparent 0) 0 0/22px 22px,var(--bg)}
+#pbApp.dark .tabs button.on {background:var(--accent-soft);color:var(--accent)}
+#pbApp.dark select {background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 3.5L5 6.5L8 3.5' stroke='%23b3a99c' fill='none' stroke-width='1.4'/></svg>")}
+
+#benchSwitch .btheme{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:6px 13px;border-radius:7px;cursor:pointer;font-weight:650;font-size:13px;font-family:inherit}
+#benchSwitch .btheme:hover{background:rgba(255,255,255,.18)}
+body[data-chart-theme="dark"]{background:#171113;color:#F6F4EC}
+body[data-chart-theme="dark"] #benchSwitch{background:#171113;border-bottom:1px solid rgba(255,255,255,.12)}
+body[data-chart-theme="dark"] #benchSwitch .bswitch{background:rgba(255,255,255,.08)}
+body[data-chart-theme="dark"] #benchSwitch .bswitch button{color:#d7ccd0}
+body[data-chart-theme="dark"] #benchSwitch .bswitch button.on{background:#FFE283;color:#251016}
+body[data-chart-theme="dark"] #benchSwitch .btheme{background:#FFE283;color:#251016;border-color:#FFE283}
+body[data-chart-theme="dark"] #sbApp{--cream:#171113;--panel:#21171B;--ink:#F6F4EC;--line:#3A2A30;--muted:#B9ABB0;color:var(--ink);background:var(--cream)}
+body[data-chart-theme="dark"] #sbApp header,
+body[data-chart-theme="dark"] #sbApp .panel,
+body[data-chart-theme="dark"] #sbApp .stage{background:var(--panel);border-color:var(--line)}
+body[data-chart-theme="dark"] #sbApp .stagewrap{background:#171113}
+body[data-chart-theme="dark"] #sbApp input[type=text],
+body[data-chart-theme="dark"] #sbApp textarea,
+body[data-chart-theme="dark"] #sbApp select,
+body[data-chart-theme="dark"] #sbApp .dt input{background:#171113;color:var(--ink);border-color:var(--line)}
+body[data-chart-theme="dark"] #sbApp .type,
+body[data-chart-theme="dark"] #sbApp .btn,
+body[data-chart-theme="dark"] #sbApp .seg button{background:#171113;color:var(--ink);border-color:var(--line)}
+body[data-chart-theme="dark"] #sbApp .seg button.on,
+body[data-chart-theme="dark"] #sbApp .btn.primary{background:#FFE283;color:#251016;border-color:#FFE283}
+body[data-chart-theme="dark"] #sbApp .hint,
+body[data-chart-theme="dark"] #sbApp .brand span,
+body[data-chart-theme="dark"] #sbApp .glabel{color:var(--muted)}
+body[data-chart-theme="dark"] #sbApp .stage svg{background:#21171B}
+body[data-chart-theme="dark"] #pbApp{background:#151515;color:#e8e2d8}
+

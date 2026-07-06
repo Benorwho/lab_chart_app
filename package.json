@@ -1,0 +1,14 @@
+{
+  "name": "arda-chartbench",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Privacy-first scientific charting in a single HTML file — Presentation (Showbench) and Scientific (Plotbench) workbenches.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
