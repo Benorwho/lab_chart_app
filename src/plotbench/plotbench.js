@@ -4,6 +4,8 @@
 
 /* ================= STATE ================= */
 const PALETTE = ['#451E28','#C09826','#A3AEBF','#5a8a4f','#b3503f','#3A3230','#8a6d3b','#6e8fa3','#9a7c1f','#7a8b3a','#b4541e','#5a6b8c'];
+// distinct qualitative palette for SuperPlot replicate colouring (points by replicate)
+const REPPAL = ['#2f6fed','#e8543f','#27a567','#8b5cf6','#C09826','#15b8c4','#e0669b','#7a8b3a'];
 const SWATCHES = ['#451E28','#3A3230','#6e6359','#b3503f','#C09826','#9a7c1f','#FFE283','#A3AEBF','#6e8fa3','#5a8a4f','#7a8b3a','#E4EDF0','#EDEADC','#FAFBF5','#2f6fed','#e8543f','#27a567','#8b5cf6','#15b8c4','#000000'];
 
 let S = defaultState();
@@ -31,6 +33,10 @@ function defaultState(){
       xRotate:0, ticks:6,
       decimals:'auto',
       showValues:false, valuePos:'above', valueDec:'auto', valueSize:0.85, valueErr:false, valueColor:'#333740',
+      // distribution plots (box / violin) + individual-point overlay (SuperPlots)
+      boxWidth:0.6, boxWhisker:'tukey', boxShowMean:true, boxFill:0.35, boxOutliers:true,
+      violinWidth:0.85, violinFill:0.35, violinBox:true,
+      showPoints:false, pointJitter:0.55, pointSize:3, pointOpacity:0.75, pointStroke:true, superplot:false,
       useRight:false,
       analysis:{on:false, eLo:0, eHi:5, yieldMethod:'offset', offset:0.2, perSeries:[]}
     }
@@ -156,12 +162,21 @@ function renderChart(){
   const leftSeries=S.series.filter(s=>s.axis==='left');
   const rightSeries=S.series.filter(s=>s.axis==='right');
   const hasRight=st.useRight && rightSeries.length>0;
+  const isDist=(type==='box'||type==='violin');      // categorical distribution plots
+  // individual replicate values behind a point (raw array, or a lone y)
+  const rawOf=p=>{const r=Array.isArray(p.raw)?p.raw.map(num).filter(v=>v!==null):[];return r.length?r:(num(p.y)!==null?[num(p.y)]:[]);};
 
   // domains
   function domainFor(list,axis){
     let lo=Infinity,hi=-Infinity;
     const bmode=st.barMode;
-    if(type==='bar' && bmode==='stacked'){
+    if(isDist || (st.showPoints && type==='bar')){
+      // size to the spread of the raw data (plus error whiskers on bars)
+      list.forEach(s=>s.pts.forEach(p=>{
+        const vals=rawOf(p); vals.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
+        if(type==='bar'){const y=num(p.y);if(y!==null){const e=s.showErr?(num(p.e)||0):0;lo=Math.min(lo,0,y-e);hi=Math.max(hi,y+e);}}
+      }));
+    } else if(type==='bar' && bmode==='stacked'){
       // sum per category across this axis's series
       const cats=new Set(); list.forEach(s=>s.pts.forEach(p=>cats.add(String(p.x))));
       cats.forEach(c=>{let pos=0,neg=0;list.forEach(s=>{const p=s.pts.find(q=>String(q.x)===c);const y=p?num(p.y):null;if(y===null)return;if(y>=0)pos+=y;else neg+=y;});hi=Math.max(hi,pos);lo=Math.min(lo,neg);});
@@ -189,8 +204,8 @@ function renderChart(){
   const Rd=hasRight?domainFor(rightSeries,'right'):null;
 
   // x handling
-  let categories=[], xIsNum=(type!=='bar');
-  if(type==='bar'){
+  let categories=[], xIsNum=(type!=='bar'&&!isDist);
+  if(type==='bar'||isDist){
     const seen=new Map();
     S.series.forEach(s=>s.pts.forEach(p=>{const k=String(p.x);if(!seen.has(k))seen.set(k,1);}));
     categories=[...seen.keys()];
@@ -241,6 +256,43 @@ function renderChart(){
   if(st.gridX){
     if(xIsNum){Xd.ticks.forEach(t=>{const x=xPos(t);g+=`<line x1="${x.toFixed(2)}" y1="${pt}" x2="${x.toFixed(2)}" y2="${pb}" stroke="${esc(st.gridColor)}" stroke-width="1"/>`;});}
     else{categories.forEach(c=>{const x=xPos(c);g+=`<line x1="${x.toFixed(2)}" y1="${pt}" x2="${x.toFixed(2)}" y2="${pb}" stroke="${esc(st.gridColor)}" stroke-width="1"/>`;});}
+  }
+
+  // ---- grouped-slot geometry (shared by bars, boxes, violins, points) ----
+  const nSeries=S.series.length||1;
+  const groupInnerG=bandW?bandW*(1-st.groupGap):0;
+  const slotG=groupInnerG/nSeries;
+  const slotCenter=(ci,si)=>pl+bandW*(ci+0.5)-groupInnerG/2+slotG*(si+0.5);
+  // deterministic jitter in [-1,1] so points don't jump between renders
+  const jitter=k=>{const x=Math.sin(k*12.9898)*43758.5453;return 2*(x-Math.floor(x))-1;};
+  function drawPoints(){
+    const r=Math.max(1,st.pointSize), sw=slotG*(1-st.barGap);
+    S.series.forEach((s,si)=>{
+      const yf=yFor(s);
+      s.pts.forEach(p=>{
+        const ci=categories.indexOf(String(p.x)); if(ci<0)return;
+        const hasRaw=Array.isArray(p.raw)&&p.raw.some(v=>num(v)!==null);
+        if(type==='bar'&&!hasRaw)return;         // don't scatter a lone mean as a "point"
+        const vals=rawOf(p); if(!vals.length)return;
+        const cx=slotCenter(ci,si);
+        // SuperPlot: colour points by replicate index (p.rep parallel to raw)
+        const reps=Array.isArray(p.rep)?p.rep:null;
+        const repKeys=reps?[...new Set(reps)]:null;
+        vals.forEach((v,k)=>{
+          const jx=cx+jitter(ci*97+si*31+k+1)*(sw/2)*st.pointJitter;
+          const col=(st.superplot&&reps)?REPPAL[repKeys.indexOf(reps[k])%REPPAL.length]:s.color;
+          g+=`<circle cx="${jx.toFixed(2)}" cy="${yf(v).toFixed(2)}" r="${r}" fill="${esc(col)}" fill-opacity="${st.pointOpacity}"${st.pointStroke?` stroke="#ffffff" stroke-width="0.8"`:''}/>`;
+        });
+        // SuperPlot: big markers at each replicate mean
+        if(st.superplot&&reps){
+          repKeys.forEach(rk=>{
+            const rv=vals.filter((_,k)=>reps[k]===rk); if(!rv.length)return;
+            const m=rv.reduce((a,b)=>a+b,0)/rv.length;
+            g+=`<circle cx="${cx.toFixed(2)}" cy="${yf(m).toFixed(2)}" r="${(r*2.1).toFixed(1)}" fill="${esc(REPPAL[repKeys.indexOf(rk)%REPPAL.length])}" stroke="#333740" stroke-width="1.1"/>`;
+          });
+        }
+      });
+    });
   }
 
   // ---- data ----
@@ -337,6 +389,48 @@ function renderChart(){
         });
       });
     }
+    if(st.showPoints)drawPoints();
+  } else if(isDist){
+    // ---- box / violin: one glyph per (category, series) in the grouped slot ----
+    const sw=slotG*(1-st.barGap);
+    S.series.forEach((s,si)=>{
+      const yf=yFor(s);
+      s.pts.forEach(p=>{
+        const ci=categories.indexOf(String(p.x)); if(ci<0)return;
+        const vals=rawOf(p); if(!vals.length)return;
+        const cx=slotCenter(ci,si), half=sw/2;
+        if(type==='violin'){
+          const dens=kde(vals,{steps:48});
+          const dmax=Math.max(...dens.map(d=>d.d))||1;
+          const halfV=half*st.violinWidth;
+          const up=dens.map(d=>`${(cx+d.d/dmax*halfV).toFixed(2)},${yf(d.v).toFixed(2)}`);
+          const dn=dens.map(d=>`${(cx-d.d/dmax*halfV).toFixed(2)},${yf(d.v).toFixed(2)}`).reverse();
+          g+=`<polygon points="${up.concat(dn).join(' ')}" fill="${esc(s.color)}" fill-opacity="${st.violinFill}" stroke="${esc(s.color)}" stroke-width="1.4" stroke-linejoin="round"/>`;
+          if(st.violinBox){
+            const b=boxStats(vals), qb=half*0.16;
+            g+=`<line x1="${cx.toFixed(2)}" y1="${yf(b.whiskerLo).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${yf(b.whiskerHi).toFixed(2)}" stroke="${ac}" stroke-width="1.1"/>`;
+            g+=`<rect x="${(cx-qb).toFixed(2)}" y="${Math.min(yf(b.q1),yf(b.q3)).toFixed(2)}" width="${(qb*2).toFixed(2)}" height="${Math.abs(yf(b.q1)-yf(b.q3)).toFixed(2)}" fill="${ac}"/>`;
+            g+=`<circle cx="${cx.toFixed(2)}" cy="${yf(b.median).toFixed(2)}" r="2.4" fill="#ffffff"/>`;
+          }
+        } else {
+          const b=boxStats(vals);
+          const yTop=Math.min(yf(b.q1),yf(b.q3)), hgt=Math.abs(yf(b.q1)-yf(b.q3));
+          const wLo=st.boxWhisker==='minmax'?b.min:b.whiskerLo, wHi=st.boxWhisker==='minmax'?b.max:b.whiskerHi;
+          // whiskers + caps
+          g+=`<line x1="${cx.toFixed(2)}" y1="${yf(b.q3).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${yf(wHi).toFixed(2)}" stroke="${ac}" stroke-width="${st.errWidth}"/>`;
+          g+=`<line x1="${cx.toFixed(2)}" y1="${yf(b.q1).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${yf(wLo).toFixed(2)}" stroke="${ac}" stroke-width="${st.errWidth}"/>`;
+          g+=`<line x1="${(cx-half*0.4).toFixed(2)}" y1="${yf(wHi).toFixed(2)}" x2="${(cx+half*0.4).toFixed(2)}" y2="${yf(wHi).toFixed(2)}" stroke="${ac}" stroke-width="${st.errWidth}"/>`;
+          g+=`<line x1="${(cx-half*0.4).toFixed(2)}" y1="${yf(wLo).toFixed(2)}" x2="${(cx+half*0.4).toFixed(2)}" y2="${yf(wLo).toFixed(2)}" stroke="${ac}" stroke-width="${st.errWidth}"/>`;
+          // IQR box
+          g+=`<rect x="${(cx-half*st.boxWidth).toFixed(2)}" y="${yTop.toFixed(2)}" width="${(half*2*st.boxWidth).toFixed(2)}" height="${hgt.toFixed(2)}" fill="${esc(s.color)}" fill-opacity="${st.boxFill}" stroke="${esc(s.color)}" stroke-width="1.4"/>`;
+          // median (bold) + optional mean (dashed diamond)
+          g+=`<line x1="${(cx-half*st.boxWidth).toFixed(2)}" y1="${yf(b.median).toFixed(2)}" x2="${(cx+half*st.boxWidth).toFixed(2)}" y2="${yf(b.median).toFixed(2)}" stroke="${esc(s.color)}" stroke-width="2.4"/>`;
+          if(st.boxShowMean)g+=marker('diamond',cx,yf(b.mean),4,st.axisColor);
+          if(st.boxOutliers&&!st.showPoints)b.outliers.forEach(o=>{g+=`<circle cx="${cx.toFixed(2)}" cy="${yf(o).toFixed(2)}" r="2.2" fill="none" stroke="${esc(s.color)}" stroke-width="1.1"/>`;});
+        }
+      });
+    });
+    if(st.showPoints)drawPoints();
   } else {
     // line + scatter
     S.series.forEach(s=>{
@@ -538,6 +632,19 @@ function renderStyle(){
   const st=S.st;
   const rail=$('#styleRail'); rail.innerHTML='';
   rail.append(el('div',{class:'railtitle'},'Appearance'));
+  const isDist=(S.type==='box'||S.type==='violin');
+  // "Data points" overlay controls — shared by bar, box and violin
+  const dataPointsSection=()=>section('Data points',[
+    rowTog(S.type==='bar'?'Overlay individual points':'Show individual points',st.showPoints,v=>{st.showPoints=v;renderStyle();renderChart();}),
+    ...(S.type==='bar'?[el('div',{class:'note'},'Shows every replicate value behind each bar — the transparency reviewers increasingly expect. Import replicates via "Compute mean ± error" or a Group,Value CSV.')]:[]),
+    ...(st.showPoints?[
+      sliderRow('Jitter',st.pointJitter,0,1,0.05,v=>{st.pointJitter=v;renderChart();}),
+      sliderRow('Point size',st.pointSize,1.5,7,0.5,v=>{st.pointSize=v;renderChart();}),
+      sliderRow('Opacity',st.pointOpacity,0.2,1,0.05,v=>{st.pointOpacity=v;renderChart();}),
+      rowTog('SuperPlot — colour by replicate',st.superplot,v=>{st.superplot=v;renderChart();}),
+      ...(st.superplot?[el('div',{class:'note'},'Colours each point by its biological replicate and marks each replicate mean with a large dot (Lord et al., JCB 2020). Needs replicate structure — use "Compute mean ± error" with one column per replicate.')]:[]),
+    ]:[]),
+  ],!st.showPoints);
 
   // Titles & labels
   rail.append(section('Titles & labels',[
@@ -605,6 +712,27 @@ function renderStyle(){
         sliderRow('Size',st.valueSize,0.6,1.3,0.05,v=>{st.valueSize=v;renderChart();}),
       ]:[]),
     ],!st.showValues));
+    rail.append(dataPointsSection());
+  } else if(isDist){
+    if(S.type==='box'){
+      rail.append(section('Box plot',[
+        sliderRow('Box width',st.boxWidth,0.2,1,0.05,v=>{st.boxWidth=v;renderChart();}),
+        sliderRow('Group gap',st.groupGap,0,0.7,0.02,v=>{st.groupGap=v;renderChart();}),
+        sliderRow('Fill opacity',st.boxFill,0,1,0.05,v=>{st.boxFill=v;renderChart();}),
+        field('Whiskers',selectEl(['tukey','minmax'],['Tukey (1.5×IQR)','Min / max'],st.boxWhisker,v=>{st.boxWhisker=v;renderChart();})),
+        rowTog('Mark mean (◆)',st.boxShowMean,v=>{st.boxShowMean=v;renderChart();}),
+        rowTog('Show outliers',st.boxOutliers,v=>{st.boxOutliers=v;renderChart();}),
+      ]));
+    } else {
+      rail.append(section('Violin',[
+        sliderRow('Width',st.violinWidth,0.3,1,0.05,v=>{st.violinWidth=v;renderChart();}),
+        sliderRow('Group gap',st.groupGap,0,0.7,0.02,v=>{st.groupGap=v;renderChart();}),
+        sliderRow('Fill opacity',st.violinFill,0,1,0.05,v=>{st.violinFill=v;renderChart();}),
+        rowTog('Inner box + median',st.violinBox,v=>{st.violinBox=v;renderChart();}),
+      ]));
+    }
+    rail.append(dataPointsSection());
+    rail.append(el('div',{class:'note',style:'padding:0 4px 8px'},'Box and violin need the individual values. Import them via "Compute mean ± error from replicates" or a Group,Value CSV; a summary-only series shows as a flat line.'));
   } else {
     rail.append(section('Lines & markers',[
       field('Line width',numEl(st.lineWidth,v=>{st.lineWidth=+v;renderChart();},0.5,8,0.5)),
@@ -845,7 +973,7 @@ function smartImport(raw){
         +agg.pts.map(p=>`${p.x} (n=${p.n})`).join(', ')+'.';
       preview=seriesPreview(agg.pts.map(p=>p.x));
       actions.push(el('button',{class:'fullbtn',onclick:()=>{
-        const pts=agg.pts.map(p=>({x:p.x,y:p.y,e:p.e}));
+        const pts=agg.pts.map(p=>({x:p.x,y:p.y,e:p.e,raw:p.raw}));
         applyBarSeries([mkSeries({name:ylab||'mean',showErr:true,pts},0)],
           {xlab:info.header?String(info.header[info.map.gi]||'').trim():'',ylab});
       }},'→ Bar chart mean ± SD per group'));
@@ -1122,14 +1250,19 @@ function computeRepl(){
   const hasLabel=$('#replLabel').value==='label';
   const errType=$('#replType').value;
   const rows=grid.map(r=>{
-    let label='',vals;
-    if(hasLabel){label=r[0];vals=r.slice(1).map(num).filter(v=>v!==null);}
-    else vals=r.map(num).filter(v=>v!==null);
+    let label='',cells;
+    if(hasLabel){label=r[0];cells=r.slice(1);}
+    else cells=r.slice();
+    // keep each replicate value with its column index → column = biological replicate
+    // across conditions, which is exactly the SuperPlot grouping for point colouring
+    const raw=[],rep=[];
+    cells.forEach((c,ci)=>{const v=num(c);if(v!==null){raw.push(v);rep.push(ci);}});
+    const vals=raw;
     const n=vals.length;const mean=n?vals.reduce((a,b)=>a+b,0)/n:0;
     const variance=n>1?vals.reduce((a,b)=>a+(b-mean)**2,0)/(n-1):0;
     const sd=Math.sqrt(variance);
     let e=sd;if(errType==='sem')e=sd/Math.sqrt(n);if(errType==='ci95')e=1.96*sd/Math.sqrt(n);
-    return {label:label||'',n,mean:+mean.toPrecision(6),e:+e.toPrecision(4)};
+    return {label:label||'',n,mean:+mean.toPrecision(6),e:+e.toPrecision(4),raw,rep};
   }).filter(r=>r.n>0);
   return rows;
 }
@@ -1147,7 +1280,7 @@ $('#replApply').onclick=()=>{
   if(!rows.length){alert('No numeric replicates found.');return;}
   const i=S.series.length;
   S.series.push({name:'Series '+(i+1),color:PALETTE[i%PALETTE.length],axis:'left',marker:'circle',mSize:6,line:true,showErr:true,
-    pts:rows.map((r,idx)=>({x:r.label||('G'+(idx+1)),y:r.mean,e:r.e}))});
+    pts:rows.map((r,idx)=>({x:r.label||('G'+(idx+1)),y:r.mean,e:r.e,raw:r.raw,rep:r.rep}))});
   renderEditor();renderStyle();renderChart();closeModal('#replModal');
 };
 

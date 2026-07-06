@@ -1,6 +1,17 @@
-# Arda Chartbench v0.5.0
+# Arda Chartbench v0.6.0
 
 **Chartbench** is privacy-first scientific charting in a single HTML file (`index.html`) with two chart-building workbenches under one roof. Just open the file in your browser — no server, no install, no external libraries to download, and your data never leaves your machine.
+
+## 🎉 What's New in v0.6.0 — Show the data
+
+Journals increasingly ask authors to show the underlying data distribution, not just bars with error bars ([SuperPlots, JCB 2020](https://rupress.org/jcb/article/219/6/e202001064/151717/); "Beyond Bar Graphs"). Plotbench now does exactly that:
+
+- **Box plots** — median, IQR box, Tukey (1.5×IQR) or min/max whiskers, outliers, optional mean marker. Grouped side by side like bars.
+- **Violin plots** — Gaussian kernel-density outline with an optional inner box + median.
+- **Individual points overlay** — jittered replicate points on bars or boxes, the transparency reviewers expect.
+- **SuperPlots** — colour each point by its biological replicate and mark each replicate mean with a large dot, following Lord et al. Import replicates with **Compute mean ± error** (one column per replicate) or a `Group, Value` CSV, and the raw values feed the box/violin/point layers automatically.
+
+All distribution statistics (quantiles, box summaries, kernel density) live in `src/core/stats.js` and are unit-tested against R/numpy reference values. Next release: significance testing with brackets and stars, built on this same tested core.
 
 ## 🎉 What's New in v0.5.0
 
@@ -94,9 +105,9 @@ Rules of the road:
 
 ## 🗺 Roadmap
 
-- **Stats v1**: t-test / Welch / Mann-Whitney, one-way ANOVA + Tukey, significance brackets and stars on charts, auto-generated methods sentence.
-- **Chart types**: box plots, dots-over-bars (SuperPlots), violin plots.
-- **Project files**: save/load the full figure state as versioned JSON.
+- ✅ **Chart types**: box plots, violin plots, dots-over-bars / SuperPlots — *shipped in v0.6.0*.
+- **Stats v1** (next): t-test / Welch / Mann-Whitney, one-way ANOVA + Tukey, significance brackets and stars on charts, auto-generated methods sentence.
+- **Project files**: save/load the full figure state as versioned JSON (config save/load already present; formalizing the schema next).
 - **Journal export**: exact figure sizing in mm + DPI presets.
 - **Curve fitting**: nonlinear regression, dose–response / EC50.
 
@@ -115,7 +126,7 @@ Rules of the road:
 
 ---
 
-**Version**: 0.5.0
+**Version**: 0.6.0
 **Release Date**: 2026
 **License**: Client-side only, no warranty
 

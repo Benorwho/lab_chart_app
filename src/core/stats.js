@@ -35,3 +35,54 @@ export function linregress(pairs){
 export function trapzArea(pts){
   let a=0; for(let i=1;i<pts.length;i++){const dx=pts[i].x-pts[i-1].x; a+=(pts[i].y+pts[i-1].y)/2*dx;} return a;
 }
+
+/* ---- distributions (box plots, violins, points) ---- */
+
+// Linear-interpolated quantile on an already-sorted ascending array.
+// Matches R quantile(type=7) and numpy.percentile (the 'linear' default).
+export function quantile(sorted, q){
+  const n=sorted.length; if(!n)return null; if(n===1)return sorted[0];
+  const h=(n-1)*q, lo=Math.floor(h), frac=h-lo;
+  return lo+1<n ? sorted[lo]+frac*(sorted[lo+1]-sorted[lo]) : sorted[lo];
+}
+
+// Five-number summary + Tukey whiskers (1.5×IQR) + outliers, from raw values.
+// Whiskers extend to the most extreme datum still within the fence.
+export function boxStats(values){
+  const v=values.map(Number).filter(x=>isFinite(x)).sort((a,b)=>a-b);
+  const n=v.length; if(!n)return null;
+  const q1=quantile(v,0.25), med=quantile(v,0.5), q3=quantile(v,0.75);
+  const iqr=q3-q1, loFence=q1-1.5*iqr, hiFence=q3+1.5*iqr;
+  let wLo=v[0], wHi=v[n-1]; const outliers=[];
+  for(const x of v){ if(x<loFence||x>hiFence)outliers.push(x); }
+  wLo=v.find(x=>x>=loFence); wHi=[...v].reverse().find(x=>x<=hiFence);
+  return {n, min:v[0], max:v[n-1], q1, median:med, q3, iqr,
+    whiskerLo:wLo, whiskerHi:wHi, outliers, mean:mean(v)};
+}
+
+// Silverman's rule-of-thumb bandwidth for a Gaussian kernel.
+export function silverman(values){
+  const v=values.filter(x=>isFinite(x));
+  const n=v.length; if(n<2)return 1;
+  const s=sd(v); const sorted=[...v].sort((a,b)=>a-b);
+  const iqr=quantile(sorted,0.75)-quantile(sorted,0.25);
+  const spread=iqr>0 ? Math.min(s,iqr/1.349) : s;
+  return 1.06*(spread||s||1)*Math.pow(n,-1/5);
+}
+
+// Gaussian kernel density estimate sampled at `steps` points across the data
+// range (padded by `pad`×bandwidth). Returns [{v, d}] for violin outlines.
+export function kde(values, {steps=48, bandwidth=null, pad=3}={}){
+  const v=values.map(Number).filter(x=>isFinite(x));
+  const n=v.length; if(!n)return [];
+  const h=bandwidth||silverman(v)||1;
+  const lo=Math.min(...v)-pad*h, hi=Math.max(...v)+pad*h;
+  const norm=1/(n*h*Math.sqrt(2*Math.PI));
+  const out=[];
+  for(let i=0;i<steps;i++){
+    const x=lo+(hi-lo)*i/(steps-1);
+    let s=0; for(const xi of v){const u=(x-xi)/h; s+=Math.exp(-0.5*u*u);}
+    out.push({v:x, d:s*norm});
+  }
+  return out;
+}

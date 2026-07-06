@@ -74,6 +74,7 @@ test('detects replicate rows: group + value with repeated groups', () => {
   assert.equal(c.y, 13);
   assert.equal(c.n, 3);
   assert.ok(Math.abs(c.e - 1) < 1e-9); // sd(12,14,13) = 1
+  assert.deepEqual(c.raw, [12, 14, 13]); // raw kept for box/violin/points
 });
 
 test('detects wide format and attaches SD columns to the series before them', () => {

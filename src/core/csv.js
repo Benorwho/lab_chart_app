@@ -204,6 +204,7 @@ export function aggregateGroupReps(body,{gi,yi}){
   return {pts:order.map(gv=>{
     const vals=map.get(gv);
     const m=mean(vals), s=vals.length>1?sd(vals):null;
-    return {x:gv, y:+m.toPrecision(6), e:s===null?'':+s.toPrecision(4), n:vals.length};
+    // keep the individual values so box / violin / point overlays can use them
+    return {x:gv, y:+m.toPrecision(6), e:s===null?'':+s.toPrecision(4), n:vals.length, raw:vals.slice()};
   })};
 }
