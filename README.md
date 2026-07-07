@@ -1,8 +1,10 @@
-# Arda Chartbench v0.6.0
+# Arda Chartbench v1.0.0
 
 **Chartbench** is privacy-first scientific charting in a single HTML file (`index.html`) with two chart-building workbenches under one roof. Just open the file in your browser — no server, no install, no external libraries to download, and your data never leaves your machine.
 
-## 🎉 What's New in v0.6.0 — Show the data
+## 🎉 v1.0.0 — Show the data
+
+The first stable release. Since the 0.x line, Chartbench gained a modular, tested, CI-backed source tree (while staying a single deployable file), Smart CSV import that understands real lab layouts, value labels on bars — and now the distribution plots that make it genuinely competitive with paid tools.
 
 Journals increasingly ask authors to show the underlying data distribution, not just bars with error bars ([SuperPlots, JCB 2020](https://rupress.org/jcb/article/219/6/e202001064/151717/); "Beyond Bar Graphs"). Plotbench now does exactly that:
 
@@ -126,7 +128,7 @@ Rules of the road:
 
 ---
 
-**Version**: 0.6.0
+**Version**: 1.0.0
 **Release Date**: 2026
 **License**: Client-side only, no warranty
 
